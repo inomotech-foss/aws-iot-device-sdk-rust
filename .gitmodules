@@ -1,0 +1,3 @@
+[submodule "packages/aws-crt-cpp-sys/aws-crt-cpp"]
+	path = packages/aws-crt-cpp-sys/aws-crt-cpp
+	url = https://github.com/awslabs/aws-crt-cpp.git

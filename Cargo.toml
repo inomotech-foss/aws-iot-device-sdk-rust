@@ -1,0 +1,18 @@
+[workspace]
+members = ["packages/*"]
+resolver = "2"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/workspaces.html
+
+[workspace.package]
+authors = [
+    "Silvestr Predko <s.predko@artk.ai>",
+    "Simon Berger <simon.berger@inomotech.com>",
+]
+edition = "2021"
+rust-version = "1.74"
+repository = "https://github.com/inomotech-foss/aws-iot-device-sdk-rust"
+
+[workspace.dependencies]
+cmake = "0.1"
+openssl-sys = { version = "0.9", features = ["vendored"] }
