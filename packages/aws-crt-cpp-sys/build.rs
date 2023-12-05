@@ -11,9 +11,20 @@ const LINK_LIBS: &[&str] = &[
     "aws-c-sdkutils",
     "aws-checksums",
     "aws-crt-cpp",
-    "crypto",
-    "s2n",
 ];
+
+const LINUX_EXTRA_LINK_LIBS: &[&str] = &["crypto", "s2n"];
+
+fn determine_link_libs() -> impl Iterator<Item=&'static str> {
+    let is_linux = std::env::var("CARGO_CFG_TARGET_OS").unwrap() == "linux";
+    
+    let extra_libs = if is_linux {
+        LINUX_EXTRA_LINK_LIBS
+    } else {
+        &[]
+    };
+    LINK_LIBS.iter().copied().chain(extra_libs.into_iter().copied())
+}
 
 fn main() {
     println!("cargo:rerun-if-changed=aws-crt-cpp");
@@ -26,7 +37,7 @@ fn main() {
     let out_dir = out_dir.to_str().unwrap();
 
     println!("cargo:rustc-link-search=native={out_dir}/lib");
-    for lib in LINK_LIBS {
+    for lib in determine_link_libs() {
         println!("cargo:rustc-link-lib=static={lib}");
     }
 }
