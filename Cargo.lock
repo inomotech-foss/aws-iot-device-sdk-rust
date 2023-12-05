@@ -5,6 +5,10 @@ version = 3
 [[package]]
 name = "aws-c-iot-sys"
 version = "0.1.0"
+dependencies = [
+ "aws-crt-cpp-sys",
+ "cmake",
+]
 
 [[package]]
 name = "aws-crt-cpp-sys"

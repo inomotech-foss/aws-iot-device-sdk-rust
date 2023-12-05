@@ -1,0 +1,15 @@
+[package]
+name = "aws-c-iot-sys"
+version = "0.1.0"
+links = "aws-c-iot"
+publish = false
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+
+[dependencies]
+aws-crt-cpp-sys.workspace = true
+
+[build-dependencies]
+cmake.workspace = true

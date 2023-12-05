@@ -1,3 +1,6 @@
 [submodule "packages/aws-crt-cpp-sys/aws-crt-cpp"]
 	path = packages/aws-crt-cpp-sys/aws-crt-cpp
 	url = https://github.com/awslabs/aws-crt-cpp.git
+[submodule "packages/aws-c-iot-sys/aws-c-iot"]
+	path = packages/aws-c-iot-sys/aws-c-iot
+	url = https://github.com/awslabs/aws-c-iot.git

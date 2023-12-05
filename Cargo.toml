@@ -14,5 +14,8 @@ rust-version = "1.74"
 repository = "https://github.com/inomotech-foss/aws-iot-device-sdk-rust"
 
 [workspace.dependencies]
+aws-c-iot-sys = { path = "packages/aws-c-iot-sys" }
+aws-crt-cpp-sys = { path = "packages/aws-crt-cpp-sys" }
+
 cmake = "0.1"
 openssl-sys = { version = "0.9", features = ["vendored"] }
