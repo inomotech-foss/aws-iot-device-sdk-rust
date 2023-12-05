@@ -8,8 +8,12 @@ edition.workspace = true
 rust-version.workspace = true
 repository.workspace = true
 
+[features]
+default = ["openssl"]
+openssl = ["dep:openssl-sys"]
+
 [dependencies]
-openssl-sys.workspace = true
+openssl-sys = { workspace = true, optional = true }
 
 [build-dependencies]
 cmake.workspace = true

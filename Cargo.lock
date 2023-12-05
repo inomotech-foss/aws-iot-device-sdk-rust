@@ -21,6 +21,11 @@ dependencies = [
 [[package]]
 name = "aws-iot-device-sdk-sys"
 version = "0.1.0+v1.30.3"
+dependencies = [
+ "aws-c-iot-sys",
+ "aws-crt-cpp-sys",
+ "cmake",
+]
 
 [[package]]
 name = "cc"

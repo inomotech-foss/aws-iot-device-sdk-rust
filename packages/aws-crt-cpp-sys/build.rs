@@ -15,12 +15,20 @@ const LINK_LIBS: &[&str] = &[
 
 fn main() {
     let out_dir = {
+        let openssl_root = std::env::var_os("DEP_OPENSSL_ROOT");
+        // we want to use openssl if the feature is explicitly enabled OR if openssl-sys
+        // is present in the build tree.
+        let use_openssl =
+            std::env::var_os("CARGO_FEATURE_OPENSSL").is_some() || openssl_root.is_some();
+
         println!("cargo:rerun-if-changed=aws-crt-cpp");
         let mut config = cmake::Config::new("aws-crt-cpp");
         config
-            .define("BUILD_DEPS", "ON")
-            .define("USE_OPENSSL", "ON");
-        if let Some(openssl_root) = std::env::var_os("DEP_OPENSSL_ROOT") {
+            .define("AWS_ENABLE_LTO", "ON")
+            .define("BUILD_DEPS", "ON") // we don't want to build all of the c libs ourselves
+            .define("BUILD_TESTING", "OFF")
+            .define("USE_OPENSSL", cmake_bool(use_openssl));
+        if let Some(openssl_root) = openssl_root {
             config.define("OpenSSL_ROOT", openssl_root);
         }
         config.build()
@@ -31,7 +39,11 @@ fn main() {
     for lib in LINK_LIBS {
         println!("cargo:rustc-link-lib=static={lib}");
     }
+}
 
-    println!("cargo:lib={out_dir}/lib");
-    println!("cargo:include={out_dir}/include");
+fn cmake_bool(value: bool) -> &'static str {
+    match value {
+        true => "ON",
+        false => "OFF",
+    }
 }

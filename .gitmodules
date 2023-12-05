@@ -4,3 +4,6 @@
 [submodule "packages/aws-c-iot-sys/aws-c-iot"]
 	path = packages/aws-c-iot-sys/aws-c-iot
 	url = https://github.com/awslabs/aws-c-iot.git
+[submodule "packages/aws-iot-device-sdk-sys/aws-iot-device-sdk-cpp-v2"]
+	path = packages/aws-iot-device-sdk-sys/aws-iot-device-sdk-cpp-v2
+	url = https://github.com/aws/aws-iot-device-sdk-cpp-v2.git
