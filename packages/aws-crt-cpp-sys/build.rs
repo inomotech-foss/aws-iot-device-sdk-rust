@@ -15,15 +15,14 @@ const LINK_LIBS: &[&str] = &[
 
 const LINUX_EXTRA_LINK_LIBS: &[&str] = &["crypto", "s2n"];
 
-fn determine_link_libs() -> impl Iterator<Item=&'static str> {
+fn determine_link_libs() -> impl Iterator<Item = &'static str> {
     let is_linux = std::env::var("CARGO_CFG_TARGET_OS").unwrap() == "linux";
-    
-    let extra_libs = if is_linux {
-        LINUX_EXTRA_LINK_LIBS
-    } else {
-        &[]
-    };
-    LINK_LIBS.iter().copied().chain(extra_libs.into_iter().copied())
+
+    let extra_libs = if is_linux { LINUX_EXTRA_LINK_LIBS } else { &[] };
+    LINK_LIBS
+        .iter()
+        .copied()
+        .chain(extra_libs.into_iter().copied())
 }
 
 fn main() {
