@@ -6,7 +6,7 @@ resolver = "2"
 
 [workspace.package]
 authors = [
-    "Silvestr Predko <s.predko@artk.ai>",
+    "Silvestr Predko <silvestr1994@gmail.com>",
     "Simon Berger <simon.berger@inomotech.com>",
 ]
 edition = "2021"
