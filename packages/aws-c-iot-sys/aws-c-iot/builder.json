@@ -1,9 +1,0 @@
-{
-    "name": "aws-c-iot",
-    "upstream": [
-        { "name": "aws-c-mqtt" }
-    ],
-    "test_steps": [
-        "test"
-    ]
-}

@@ -1,0 +1,15 @@
+[package]
+name = "aws-c-compression-sys"
+version = "0.1.0+v0.2.17"
+links = "aws-c-compression"
+publish = false
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+
+[dependencies]
+aws-c-common-sys.workspace = true
+
+[build-dependencies]
+cmake.workspace = true

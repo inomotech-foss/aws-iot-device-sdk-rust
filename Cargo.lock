@@ -18,6 +18,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "aws-c-compression-sys"
+version = "0.1.0+v0.2.17"
+dependencies = [
+ "aws-c-common-sys",
+ "cmake",
+]
+
+[[package]]
 name = "aws-c-io-sys"
 version = "0.1.0+v0.13.35"
 dependencies = [
