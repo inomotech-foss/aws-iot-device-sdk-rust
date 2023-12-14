@@ -3,8 +3,32 @@
 version = 3
 
 [[package]]
+name = "aws-c-cal-sys"
+version = "0.1.0+v0.6.9"
+dependencies = [
+ "aws-c-common-sys",
+ "cmake",
+]
+
+[[package]]
+name = "aws-c-common-sys"
+version = "0.1.0+v0.9.10"
+dependencies = [
+ "cmake",
+]
+
+[[package]]
+name = "aws-c-io-sys"
+version = "0.1.0+v0.13.35"
+dependencies = [
+ "aws-c-cal-sys",
+ "aws-c-common-sys",
+ "cmake",
+]
+
+[[package]]
 name = "aws-c-iot-sys"
-version = "0.1.0"
+version = "0.1.0+v0.1.18"
 dependencies = [
  "aws-crt-cpp-sys",
  "cmake",
@@ -21,7 +45,7 @@ dependencies = [
 
 [[package]]
 name = "aws-iot-device-sdk-sys"
-version = "0.1.0+v1.30.3"
+version = "0.1.0+v1.31.0"
 dependencies = [
  "aws-c-iot-sys",
  "aws-crt-cpp-sys",

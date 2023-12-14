@@ -1,7 +1,7 @@
 [package]
-name = "aws-iot-device-sdk-sys"
-version = "0.1.0+v1.31.0"
-links = "aws-iot-device-sdk-cpp-v2"
+name = "aws-c-cal-sys"
+version = "0.1.0+v0.6.9"
+links = "aws-c-cal"
 publish = false
 authors.workspace = true
 edition.workspace = true
@@ -9,8 +9,7 @@ rust-version.workspace = true
 repository.workspace = true
 
 [dependencies]
-aws-c-iot-sys.workspace = true
-aws-crt-cpp-sys.workspace = true
+aws-c-common-sys.workspace = true
 
 [build-dependencies]
 cmake.workspace = true

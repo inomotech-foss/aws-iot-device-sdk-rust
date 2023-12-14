@@ -29,7 +29,7 @@ fn main() {
     println!("cargo:rerun-if-changed=aws-crt-cpp");
     let out_dir = cmake::Config::new("aws-crt-cpp")
         .define("AWS_ENABLE_LTO", "ON")
-        .define("BUILD_DEPS", "ON") // we don't want to build all of the c libs ourselves
+        .define("BUILD_DEPS", "OFF") // we don't want to build all of the c libs ourselves
         .define("BUILD_TESTING", "OFF")
         .define("USE_OPENSSL", "OFF")
         .build();

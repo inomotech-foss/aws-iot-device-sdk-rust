@@ -1,6 +1,6 @@
 [package]
 name = "aws-c-iot-sys"
-version = "0.1.0"
+version = "0.1.0+v0.1.18"
 links = "aws-c-iot"
 publish = false
 authors.workspace = true
