@@ -48,6 +48,7 @@ def _update_package_submodule(cargo_path: Path) -> None:
         check=True,
         cwd=_PROJECT_DIR,
     )
+    shutil.rmtree(lib_dir / ".git")
 
 
 def main() -> None:

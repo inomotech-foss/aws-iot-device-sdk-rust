@@ -10,7 +10,6 @@ fn main() {
         .define("BUILD_TESTING", "OFF")
         .build();
     let out_dir = out_dir.to_str().unwrap();
-
     println!("cargo:rustc-link-search=native={out_dir}/lib");
     println!("cargo:rustc-link-lib=static={LIB_NAME}");
 }
