@@ -16,7 +16,11 @@ repository = "https://github.com/inomotech-foss/aws-iot-device-sdk-rust"
 [workspace.dependencies]
 aws-c-cal-sys = { path = "packages/aws-c-cal-sys" }
 aws-c-common-sys = { path = "packages/aws-c-common-sys" }
+aws-c-compression-sys = { path = "packages/aws-c-compression-sys" }
+aws-c-http-sys = { path = "packages/aws-c-http-sys" }
+aws-c-io-sys = { path = "packages/aws-c-io-sys" }
 aws-c-iot-sys = { path = "packages/aws-c-iot-sys" }
+aws-c-mqtt-sys = { path = "packages/aws-c-mqtt-sys" }
 aws-crt-cpp-sys = { path = "packages/aws-crt-cpp-sys" }
 aws-iot-device-sdk-sys = { path = "packages/aws-iot-device-sdk-sys" }
 

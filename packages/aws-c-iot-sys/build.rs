@@ -1,14 +1,15 @@
-fn main() {
-    let crt_root = std::env::var("DEP_AWS_CRT_CPP_ROOT").unwrap();
+const LIB_NAME: &str = "aws-c-iot";
 
-    println!("cargo:rerun-if-changed=aws-c-iot");
-    let out_dir = cmake::Config::new("aws-c-iot")
-        .define("CMAKE_PREFIX_PATH", crt_root)
+fn main() {
+    let cmake_roots = [std::env::var("DEP_AWS_C_MQTT_ROOT").unwrap()];
+
+    println!("cargo:rerun-if-changed={LIB_NAME}");
+    let out_dir = cmake::Config::new(LIB_NAME)
+        .define("CMAKE_PREFIX_PATH", cmake_roots.join(";"))
         .define("AWS_ENABLE_LTO", "ON")
         .define("BUILD_TESTING", "OFF")
         .build();
     let out_dir = out_dir.to_str().unwrap();
-
     println!("cargo:rustc-link-search=native={out_dir}/lib");
-    println!("cargo:rustc-link-lib=static=aws-c-iot");
+    println!("cargo:rustc-link-lib=static={LIB_NAME}");
 }

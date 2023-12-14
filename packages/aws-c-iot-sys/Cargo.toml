@@ -9,7 +9,7 @@ rust-version.workspace = true
 repository.workspace = true
 
 [dependencies]
-aws-crt-cpp-sys.workspace = true
+aws-c-mqtt-sys.workspace = true
 
 [build-dependencies]
 cmake.workspace = true

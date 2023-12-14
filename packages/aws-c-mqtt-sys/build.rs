@@ -1,9 +1,12 @@
-const LIB_NAME: &str = "aws-c-cal";
+const LIB_NAME: &str = "aws-c-mqtt";
 
 fn main() {
     let cmake_roots = [
         std::env::var("DEP_AWS_C_CAL_ROOT").unwrap(),
         std::env::var("DEP_AWS_C_COMMON_ROOT").unwrap(),
+        std::env::var("DEP_AWS_C_COMPRESSION_ROOT").unwrap(),
+        std::env::var("DEP_AWS_C_HTTP_ROOT").unwrap(),
+        std::env::var("DEP_AWS_C_IO_ROOT").unwrap(),
     ];
 
     println!("cargo:rerun-if-changed={LIB_NAME}");

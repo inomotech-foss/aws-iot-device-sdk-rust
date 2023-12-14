@@ -1,0 +1,18 @@
+[package]
+name = "aws-c-http-sys"
+version = "0.1.0+v0.7.14"
+links = "aws-c-http"
+publish = false
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+
+[dependencies]
+aws-c-cal-sys.workspace = true
+aws-c-common-sys.workspace = true
+aws-c-compression-sys.workspace = true
+aws-c-io-sys.workspace = true
+
+[build-dependencies]
+cmake.workspace = true

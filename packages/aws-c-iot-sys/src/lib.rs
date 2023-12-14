@@ -1,1 +1,1 @@
-extern crate aws_crt_cpp_sys;
+extern crate aws_c_mqtt_sys;
