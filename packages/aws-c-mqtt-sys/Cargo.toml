@@ -9,7 +9,9 @@ rust-version.workspace = true
 repository.workspace = true
 
 [dependencies]
+aws-c-common-sys.workspace = true
 aws-c-http-sys.workspace = true
+aws-c-io-sys.workspace = true
 
 [build-dependencies]
 aws-c-builder.workspace = true

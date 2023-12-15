@@ -9,6 +9,7 @@ rust-version.workspace = true
 repository.workspace = true
 
 [dependencies]
+aws-c-common-sys.workspace = true
 aws-c-mqtt-sys.workspace = true
 
 [build-dependencies]

@@ -1,21 +1,106 @@
-pub fn build(lib_name: &str, deps: &[&str]) {
-    let cmake_prefix_path = get_cmake_prefix_path(deps).join(";");
-    println!("cargo:cmake_prefix_path={cmake_prefix_path}");
+use std::path::PathBuf;
 
-    println!("cargo:rerun-if-changed={lib_name}");
-    let out_dir = cmake::Config::new(lib_name)
-        .define("CMAKE_PREFIX_PATH", cmake_prefix_path)
-        .define("AWS_ENABLE_LTO", "ON")
-        .define("BUILD_TESTING", "OFF")
-        .build();
-    let out_dir = out_dir.to_str().unwrap();
-    println!("cargo:rustc-link-search=native={out_dir}/lib");
-    println!("cargo:rustc-link-lib=static={lib_name}");
+pub struct Config {
+    lib_name: String,
+    aws_dependencies: Vec<String>,
+    cmake_callback: Option<Box<dyn FnOnce(&mut cmake::Config)>>,
+    bindgen_callback: Option<Box<dyn FnOnce(bindgen::Builder) -> bindgen::Builder>>,
 }
 
-fn get_cmake_prefix_path(deps: &[&str]) -> Vec<String> {
+impl Config {
+    pub fn new(lib_name: impl Into<String>) -> Self {
+        Self {
+            lib_name: lib_name.into(),
+            aws_dependencies: Vec::new(),
+            cmake_callback: None,
+            bindgen_callback: None,
+        }
+    }
+
+    pub fn aws_dependencies<I>(&mut self, deps: I) -> &mut Self
+    where
+        I: IntoIterator,
+        I::Item: AsRef<str>,
+    {
+        self.aws_dependencies = deps.into_iter().map(|s| s.as_ref().to_owned()).collect();
+        self
+    }
+
+    pub fn cmake_callback(
+        &mut self,
+        callback: impl FnOnce(&mut cmake::Config) + 'static,
+    ) -> &mut Self {
+        self.cmake_callback = Some(Box::new(callback));
+        self
+    }
+
+    pub fn bindgen_callback(
+        &mut self,
+        callback: impl FnOnce(bindgen::Builder) -> bindgen::Builder + 'static,
+    ) -> &mut Self {
+        self.bindgen_callback = Some(Box::new(callback));
+        self
+    }
+
+    pub fn build(&mut self) {
+        let dependency_root_paths = get_dependency_root_paths(&self.aws_dependencies);
+        let cmake_prefix_path = dependency_root_paths.join(";");
+        println!("cargo:cmake_prefix_path={cmake_prefix_path}");
+        let out_dir = self.compile(&cmake_prefix_path);
+        self.generate_bindings(&out_dir, &dependency_root_paths);
+    }
+
+    fn compile(&mut self, cmake_prefix_path: &str) -> String {
+        println!("cargo:rerun-if-changed={}", self.lib_name);
+        let mut config = cmake::Config::new(&self.lib_name);
+        config
+            .define("CMAKE_PREFIX_PATH", cmake_prefix_path)
+            .define("AWS_ENABLE_LTO", "ON")
+            .define("BUILD_TESTING", "OFF");
+
+        if let Some(cb) = self.cmake_callback.take() {
+            cb(&mut config);
+        }
+
+        let out_dir = config.build().to_str().unwrap().to_owned();
+        println!("cargo:rustc-link-search=native={out_dir}/lib");
+        println!("cargo:rustc-link-lib=static={}", self.lib_name);
+        out_dir
+    }
+
+    fn generate_bindings(&mut self, lib_root: &str, dependency_root_paths: &[String]) {
+        let include_args = std::iter::once(lib_root)
+            .chain(dependency_root_paths.iter().map(String::as_str))
+            .map(|path| format!("-I{path}/include"));
+
+        println!("cargo:rerun-if-changed=wrapper.h");
+        let mut builder = bindgen::builder()
+            .allowlist_recursively(false)
+            .array_pointers_in_arguments(true)
+            .enable_function_attribute_detection()
+            .generate_cstr(true)
+            .merge_extern_blocks(true)
+            .prepend_enum_name(false)
+            .sort_semantically(true)
+            .use_core()
+            .clang_args(include_args)
+            .header("wrapper.h");
+        if let Some(cb) = self.bindgen_callback.take() {
+            builder = cb(builder);
+        }
+
+        let bindings = builder.generate().unwrap();
+
+        let out_path = PathBuf::from(std::env::var("OUT_DIR").unwrap());
+        bindings
+            .write_to_file(out_path.join("bindings.rs"))
+            .unwrap();
+    }
+}
+
+fn get_dependency_root_paths(deps: &[String]) -> Vec<String> {
     let mut all_paths = Vec::<String>::with_capacity(deps.len());
-    for &dep in deps {
+    for dep in deps {
         let root = get_build_variable(dep, "ROOT");
         if all_paths.iter().any(|existing| existing == &root) {
             // since it's transitive, we know that we have all its dependencies as well.

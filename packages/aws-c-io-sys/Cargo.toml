@@ -11,6 +11,7 @@ repository.workspace = true
 [dependencies]
 aws-c-cal-sys.workspace = true
 aws-c-common-sys.workspace = true
+libc.workspace = true
 
 [build-dependencies]
 aws-c-builder.workspace = true

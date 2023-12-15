@@ -18,7 +18,7 @@ schannel = "0.1"
 security-framework = "2"
 
 [target.'cfg(all(unix, not(target_os = "macos")))'.dependencies]
-s2n-tls-sys.workspace = true
+aws-lc-sys.workspace = true
 
 [build-dependencies]
 aws-c-builder.workspace = true
