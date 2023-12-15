@@ -24,6 +24,8 @@ aws-c-iot-sys = { path = "packages/aws-c-iot-sys" }
 aws-c-mqtt-sys = { path = "packages/aws-c-mqtt-sys" }
 aws-crt-cpp-sys = { path = "packages/aws-crt-cpp-sys" }
 aws-iot-device-sdk-sys = { path = "packages/aws-iot-device-sdk-sys" }
+aws-lc-sys = { path = "packages/aws-lc-sys" }
+s2n-tls-sys = { path = "packages/s2n-tls-sys" }
 
 cmake = "0.1"
 openssl-sys = { version = "0.9", features = ["vendored"] }

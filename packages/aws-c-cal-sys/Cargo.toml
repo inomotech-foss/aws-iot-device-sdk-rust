@@ -11,5 +11,14 @@ repository.workspace = true
 [dependencies]
 aws-c-common-sys.workspace = true
 
+[target.'cfg(windows)'.dependencies]
+schannel = "0.1"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+security-framework = "2"
+
+[target.'cfg(all(unix, not(target_os = "macos")))'.dependencies]
+s2n-tls-sys.workspace = true
+
 [build-dependencies]
 aws-c-builder.workspace = true

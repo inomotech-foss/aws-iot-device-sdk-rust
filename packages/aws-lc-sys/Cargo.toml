@@ -1,6 +1,7 @@
 [package]
-name = "aws-c-builder"
-version = "0.1.0"
+name = "aws-lc-sys"
+version = "0.1.0+v1.18.0"
+links = "aws-lc"
 publish = false
 authors.workspace = true
 edition.workspace = true
@@ -8,7 +9,9 @@ rust-version.workspace = true
 repository.workspace = true
 
 [package.metadata.aws-c-builder]
-ignore = true
+repo = "https://github.com/aws/aws-lc.git"
 
 [dependencies]
-cmake.workspace = true
+
+[build-dependencies]
+aws-c-builder.workspace = true
