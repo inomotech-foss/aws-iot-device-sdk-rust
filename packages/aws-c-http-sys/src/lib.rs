@@ -1,3 +1,5 @@
+//! C99 implementation of the HTTP/1.1 and HTTP/2 specifications.
+
 #![no_std]
 
 extern crate aws_c_compression_sys;

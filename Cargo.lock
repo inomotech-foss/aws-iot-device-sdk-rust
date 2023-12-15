@@ -87,24 +87,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "aws-crt-cpp-sys"
-version = "0.1.0+v0.24.9"
-dependencies = [
- "cmake",
- "schannel",
- "security-framework",
-]
-
-[[package]]
-name = "aws-iot-device-sdk-sys"
-version = "0.1.0+v1.31.0"
-dependencies = [
- "aws-c-iot-sys",
- "aws-crt-cpp-sys",
- "cmake",
-]
-
-[[package]]
 name = "aws-lc-sys"
 version = "0.1.0+v1.18.0"
 dependencies = [

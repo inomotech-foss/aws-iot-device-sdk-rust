@@ -1,3 +1,6 @@
+//! aws-c-io is an event driven framework for implementing application
+//! protocols.
+
 #![no_std]
 
 extern crate aws_c_cal_sys;

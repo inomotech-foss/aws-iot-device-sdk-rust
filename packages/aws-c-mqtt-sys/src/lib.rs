@@ -1,3 +1,5 @@
+//! C99 implementation of the MQTT 3.1.1 and MQTT 5 specifications.
+
 #![no_std]
 
 extern crate aws_c_http_sys;

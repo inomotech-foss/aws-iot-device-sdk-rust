@@ -1,3 +1,5 @@
+//! C99 implementation of AWS IoT cloud services integration with devices.
+
 #![no_std]
 
 extern crate aws_c_mqtt_sys;

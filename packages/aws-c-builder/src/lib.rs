@@ -1,3 +1,5 @@
+//! Build script dependency for all related aws c library packages.
+
 use std::path::PathBuf;
 
 pub struct Config {

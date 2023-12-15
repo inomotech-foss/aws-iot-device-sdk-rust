@@ -1,3 +1,6 @@
+//! AWS-LC is a general-purpose cryptographic library maintained by the AWS
+//! Cryptography team for AWS and their customers.
+
 #![no_std]
 
 mod bindings {

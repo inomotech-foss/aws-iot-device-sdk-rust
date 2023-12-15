@@ -1,3 +1,6 @@
+//! AWS Crypto Abstraction Layer: Cross-Platform, C99 wrapper for cryptography
+//! primitives.
+
 #![no_std]
 
 extern crate aws_c_common_sys;

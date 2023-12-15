@@ -1,3 +1,6 @@
+//! s2n-tls is a C99 implementation of the TLS/SSL protocols that is designed to
+//! be simple, small, fast, and with security as a priority.
+
 #![no_std]
 
 extern crate aws_lc_sys;
