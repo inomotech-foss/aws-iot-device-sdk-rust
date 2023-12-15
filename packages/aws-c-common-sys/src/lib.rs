@@ -10,9 +10,6 @@ mod bindings {
     )]
     use libc::*;
 
-    // TODO: why is this missing and do we really need it?
-    type pthread_once_t = c_int;
-
     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 }
 

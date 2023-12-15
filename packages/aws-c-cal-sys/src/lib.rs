@@ -2,7 +2,7 @@
 
 extern crate aws_c_common_sys;
 #[cfg(all(unix, not(target_os = "macos")))]
-extern crate aws_lc;
+extern crate aws_lc_sys;
 #[cfg(windows)]
 extern crate schannel;
 #[cfg(target_os = "macos")]

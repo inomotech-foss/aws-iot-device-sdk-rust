@@ -3,15 +3,19 @@ use std::path::PathBuf;
 pub struct Config {
     lib_name: String,
     aws_dependencies: Vec<String>,
+    link_libraries: Vec<String>,
     cmake_callback: Option<Box<dyn FnOnce(&mut cmake::Config)>>,
     bindgen_callback: Option<Box<dyn FnOnce(bindgen::Builder) -> bindgen::Builder>>,
 }
 
 impl Config {
     pub fn new(lib_name: impl Into<String>) -> Self {
+        let lib_name = lib_name.into();
+        let link_libraries = vec![lib_name.clone()];
         Self {
-            lib_name: lib_name.into(),
+            lib_name,
             aws_dependencies: Vec::new(),
+            link_libraries,
             cmake_callback: None,
             bindgen_callback: None,
         }
@@ -23,6 +27,15 @@ impl Config {
         I::Item: AsRef<str>,
     {
         self.aws_dependencies = deps.into_iter().map(|s| s.as_ref().to_owned()).collect();
+        self
+    }
+
+    pub fn link_libraries<I>(&mut self, libs: I) -> &mut Self
+    where
+        I: IntoIterator,
+        I::Item: AsRef<str>,
+    {
+        self.link_libraries = libs.into_iter().map(|s| s.as_ref().to_owned()).collect();
         self
     }
 
@@ -64,7 +77,9 @@ impl Config {
 
         let out_dir = config.build().to_str().unwrap().to_owned();
         println!("cargo:rustc-link-search=native={out_dir}/lib");
-        println!("cargo:rustc-link-lib=static={}", self.lib_name);
+        for name in &self.link_libraries {
+            println!("cargo:rustc-link-lib=static={name}");
+        }
         out_dir
     }
 
@@ -123,7 +138,13 @@ fn get_dependency_root_paths(deps: &[String]) -> Vec<String> {
 
 fn get_build_variable(package: &str, var: &str) -> String {
     let Ok(v) = std::env::var(format!("DEP_{package}_{var}")) else {
-        panic!("package '{package}' didn't set the '{var}' variable in its build script");
+        panic!("package '{package}' didn't set the '{var}' variable in its build script or isn't a direct dependency of this package");
     };
     v
+}
+
+pub fn is_linux_like() -> bool {
+    // anything unix that isn't macos is considered "Linux" by AWS
+    std::env::var("CARGO_CFG_TARGET_FAMILY").unwrap() == "unix"
+        && std::env::var("CARGO_CFG_TARGET_OS").unwrap() != "macos"
 }

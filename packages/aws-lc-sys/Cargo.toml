@@ -12,6 +12,7 @@ repository.workspace = true
 repo = "https://github.com/aws/aws-lc.git"
 
 [dependencies]
+libc.workspace = true
 
 [build-dependencies]
 aws-c-builder.workspace = true
