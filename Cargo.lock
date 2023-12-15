@@ -3,66 +3,67 @@
 version = 3
 
 [[package]]
+name = "aws-c-builder"
+version = "0.1.0"
+dependencies = [
+ "cmake",
+]
+
+[[package]]
 name = "aws-c-cal-sys"
 version = "0.1.0+v0.6.9"
 dependencies = [
+ "aws-c-builder",
  "aws-c-common-sys",
- "cmake",
 ]
 
 [[package]]
 name = "aws-c-common-sys"
 version = "0.1.0+v0.9.10"
 dependencies = [
- "cmake",
+ "aws-c-builder",
 ]
 
 [[package]]
 name = "aws-c-compression-sys"
 version = "0.1.0+v0.2.17"
 dependencies = [
+ "aws-c-builder",
  "aws-c-common-sys",
- "cmake",
 ]
 
 [[package]]
 name = "aws-c-http-sys"
 version = "0.1.0+v0.7.14"
 dependencies = [
- "aws-c-cal-sys",
- "aws-c-common-sys",
+ "aws-c-builder",
  "aws-c-compression-sys",
  "aws-c-io-sys",
- "cmake",
 ]
 
 [[package]]
 name = "aws-c-io-sys"
 version = "0.1.0+v0.13.35"
 dependencies = [
+ "aws-c-builder",
  "aws-c-cal-sys",
  "aws-c-common-sys",
- "cmake",
 ]
 
 [[package]]
 name = "aws-c-iot-sys"
 version = "0.1.0+v0.1.18"
 dependencies = [
+ "aws-c-builder",
  "aws-c-mqtt-sys",
- "cmake",
 ]
 
 [[package]]
 name = "aws-c-mqtt-sys"
 version = "0.1.0+v0.10.0"
 dependencies = [
- "aws-c-cal-sys",
- "aws-c-common-sys",
- "aws-c-compression-sys",
+ "aws-c-builder",
  "aws-c-http-sys",
- "aws-c-io-sys",
- "cmake",
 ]
 
 [[package]]

@@ -13,4 +13,4 @@ aws-c-cal-sys.workspace = true
 aws-c-common-sys.workspace = true
 
 [build-dependencies]
-cmake.workspace = true
+aws-c-builder.workspace = true

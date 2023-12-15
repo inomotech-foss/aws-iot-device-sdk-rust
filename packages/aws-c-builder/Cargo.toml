@@ -1,7 +1,6 @@
 [package]
-name = "aws-c-common-sys"
-version = "0.1.0+v0.9.10"
-links = "aws-c-common"
+name = "aws-c-builder"
+version = "0.1.0"
 publish = false
 authors.workspace = true
 edition.workspace = true
@@ -9,6 +8,4 @@ rust-version.workspace = true
 repository.workspace = true
 
 [dependencies]
-
-[build-dependencies]
-aws-c-builder.workspace = true
+cmake.workspace = true

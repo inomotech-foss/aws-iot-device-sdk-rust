@@ -14,6 +14,7 @@ rust-version = "1.74"
 repository = "https://github.com/inomotech-foss/aws-iot-device-sdk-rust"
 
 [workspace.dependencies]
+aws-c-builder = { path = "packages/aws-c-builder" }
 aws-c-cal-sys = { path = "packages/aws-c-cal-sys" }
 aws-c-common-sys = { path = "packages/aws-c-common-sys" }
 aws-c-compression-sys = { path = "packages/aws-c-compression-sys" }
