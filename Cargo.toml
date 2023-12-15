@@ -18,10 +18,12 @@ aws-c-builder = { path = "packages/aws-c-builder" }
 aws-c-cal-sys = { path = "packages/aws-c-cal-sys" }
 aws-c-common-sys = { path = "packages/aws-c-common-sys" }
 aws-c-compression-sys = { path = "packages/aws-c-compression-sys" }
+aws-c-event-stream-sys = { path = "packages/aws-c-event-stream-sys" }
 aws-c-http-sys = { path = "packages/aws-c-http-sys" }
 aws-c-io-sys = { path = "packages/aws-c-io-sys" }
 aws-c-iot-sys = { path = "packages/aws-c-iot-sys" }
 aws-c-mqtt-sys = { path = "packages/aws-c-mqtt-sys" }
+aws-checksums-sys = { path = "packages/aws-checksums-sys" }
 aws-lc-sys = { path = "packages/aws-lc-sys" }
 s2n-tls-sys = { path = "packages/s2n-tls-sys" }
 

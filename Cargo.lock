@@ -47,6 +47,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "aws-c-event-stream-sys"
+version = "0.1.0+v0.3.2"
+dependencies = [
+ "aws-c-builder",
+ "aws-c-common-sys",
+ "aws-c-io-sys",
+ "aws-checksums-sys",
+ "libc",
+]
+
+[[package]]
 name = "aws-c-http-sys"
 version = "0.1.0+v0.7.14"
 dependencies = [
@@ -84,6 +95,14 @@ dependencies = [
  "aws-c-common-sys",
  "aws-c-http-sys",
  "aws-c-io-sys",
+]
+
+[[package]]
+name = "aws-checksums-sys"
+version = "0.1.0+v0.1.17"
+dependencies = [
+ "aws-c-builder",
+ "aws-c-common-sys",
 ]
 
 [[package]]

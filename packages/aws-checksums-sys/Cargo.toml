@@ -1,0 +1,15 @@
+[package]
+name = "aws-checksums-sys"
+version = "0.1.0+v0.1.17"
+links = "aws-checksums"
+publish = false
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+
+[dependencies]
+aws-c-common-sys.workspace = true
+
+[build-dependencies]
+aws-c-builder.workspace = true
