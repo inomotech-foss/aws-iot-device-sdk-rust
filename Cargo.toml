@@ -14,6 +14,7 @@ rust-version = "1.74"
 repository = "https://github.com/inomotech-foss/aws-iot-device-sdk-rust"
 
 [workspace.dependencies]
+aws-c-auth-sys = { path = "packages/aws-c-auth-sys" }
 aws-c-builder = { path = "packages/aws-c-builder" }
 aws-c-cal-sys = { path = "packages/aws-c-cal-sys" }
 aws-c-common-sys = { path = "packages/aws-c-common-sys" }
@@ -23,6 +24,8 @@ aws-c-http-sys = { path = "packages/aws-c-http-sys" }
 aws-c-io-sys = { path = "packages/aws-c-io-sys" }
 aws-c-iot-sys = { path = "packages/aws-c-iot-sys" }
 aws-c-mqtt-sys = { path = "packages/aws-c-mqtt-sys" }
+aws-c-s3-sys = { path = "packages/aws-c-s3-sys" }
+aws-c-sdkutils-sys = { path = "packages/aws-c-sdkutils-sys" }
 aws-checksums-sys = { path = "packages/aws-checksums-sys" }
 aws-lc-sys = { path = "packages/aws-lc-sys" }
 s2n-tls-sys = { path = "packages/s2n-tls-sys" }

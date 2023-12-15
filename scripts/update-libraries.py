@@ -6,6 +6,8 @@ from typing import Any, TypedDict, cast
 
 _PROJECT_DIR = (Path(__file__) / "../..").resolve()
 
+# git -c 'versionsort.suffix=-' ls-remote --tags --sort='v:refname' <repository>
+
 
 class CargoPackage(TypedDict, total=False):
     name: str

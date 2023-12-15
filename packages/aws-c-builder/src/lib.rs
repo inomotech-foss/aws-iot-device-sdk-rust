@@ -6,6 +6,7 @@ pub struct Config {
     lib_name: String,
     aws_dependencies: Vec<String>,
     link_libraries: Vec<String>,
+    include_dir_names: Vec<String>,
     cmake_callback: Option<Box<dyn FnOnce(&mut cmake::Config)>>,
     bindgen_callback: Option<Box<dyn FnOnce(bindgen::Builder) -> bindgen::Builder>>,
 }
@@ -18,6 +19,7 @@ impl Config {
             lib_name,
             aws_dependencies: Vec::new(),
             link_libraries,
+            include_dir_names: Vec::new(),
             cmake_callback: None,
             bindgen_callback: None,
         }
@@ -38,6 +40,15 @@ impl Config {
         I::Item: AsRef<str>,
     {
         self.link_libraries = libs.into_iter().map(|s| s.as_ref().to_owned()).collect();
+        self
+    }
+
+    pub fn include_dir_names<I>(&mut self, names: I) -> &mut Self
+    where
+        I: IntoIterator,
+        I::Item: AsRef<str>,
+    {
+        self.include_dir_names = names.into_iter().map(|s| s.as_ref().to_owned()).collect();
         self
     }
 
@@ -104,6 +115,9 @@ impl Config {
             .header("wrapper.h");
         if let Some(cb) = self.bindgen_callback.take() {
             builder = cb(builder);
+        }
+        for name in &self.include_dir_names {
+            builder = builder.allowlist_file(format!(".*/{name}/[^/]+\\.h"));
         }
 
         let bindings = builder.generate().unwrap();

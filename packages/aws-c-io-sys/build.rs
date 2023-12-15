@@ -5,6 +5,6 @@ fn main() {
     }
     aws_c_builder::Config::new("aws-c-io")
         .aws_dependencies(aws_deps)
-        .bindgen_callback(|builder| builder.allowlist_file(".+/aws/io/.+"))
+        .include_dir_names(&["io"])
         .build()
 }

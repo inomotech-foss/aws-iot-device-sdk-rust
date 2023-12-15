@@ -12,6 +12,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "aws-c-auth-sys"
+version = "0.1.0+v0.7.8"
+dependencies = [
+ "aws-c-builder",
+ "aws-c-cal-sys",
+ "aws-c-common-sys",
+ "aws-c-http-sys",
+ "aws-c-io-sys",
+ "aws-c-sdkutils-sys",
+]
+
+[[package]]
 name = "aws-c-builder"
 version = "0.1.0"
 dependencies = [
@@ -95,6 +107,25 @@ dependencies = [
  "aws-c-common-sys",
  "aws-c-http-sys",
  "aws-c-io-sys",
+]
+
+[[package]]
+name = "aws-c-s3-sys"
+version = "0.1.0+v0.4.5"
+dependencies = [
+ "aws-c-auth-sys",
+ "aws-c-builder",
+ "aws-c-common-sys",
+ "aws-c-io-sys",
+ "aws-checksums-sys",
+]
+
+[[package]]
+name = "aws-c-sdkutils-sys"
+version = "0.1.0+v0.1.13"
+dependencies = [
+ "aws-c-builder",
+ "aws-c-common-sys",
 ]
 
 [[package]]
