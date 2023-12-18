@@ -119,6 +119,10 @@ impl Config {
             .allowlist_recursively(false)
             .array_pointers_in_arguments(true)
             .enable_function_attribute_detection()
+            .default_enum_style(bindgen::EnumVariation::NewType {
+                is_bitfield: false,
+                is_global: true,
+            })
             .generate_cstr(true)
             .merge_extern_blocks(true)
             .prepend_enum_name(false)
@@ -142,9 +146,19 @@ impl Config {
     }
 }
 
-fn get_dependency_root_paths(deps: &[String]) -> Vec<String> {
-    let mut all_paths = Vec::<String>::with_capacity(deps.len());
+pub fn get_dependency_root_paths<I>(deps: I) -> Vec<String>
+where
+    I: IntoIterator,
+    I::Item: AsRef<str>,
+{
+    let deps = deps.into_iter();
+
+    let mut all_paths = Vec::<String>::with_capacity({
+        let (lower, upper) = deps.size_hint();
+        upper.unwrap_or(lower)
+    });
     for dep in deps {
+        let dep = dep.as_ref();
         let root = get_build_variable(dep, "ROOT");
         if all_paths.iter().any(|existing| existing == &root) {
             // since it's transitive, we know that we have all its dependencies as well.
@@ -158,10 +172,10 @@ fn get_dependency_root_paths(deps: &[String]) -> Vec<String> {
                 .filter(|s| !s.is_empty())
                 .map(str::to_owned),
         );
+        all_paths.sort_unstable();
+        all_paths.dedup();
     }
 
-    all_paths.sort_unstable();
-    all_paths.dedup();
     all_paths
 }
 
