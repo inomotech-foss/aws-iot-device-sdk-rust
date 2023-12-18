@@ -2,6 +2,11 @@
 
 #![no_std]
 
+extern crate aws_c_common_sys;
+extern crate aws_c_http_sys;
+extern crate aws_c_io_sys;
+extern crate aws_c_mqtt_sys;
+
 mod bindings {
     #![allow(
         clippy::all,

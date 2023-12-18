@@ -13,4 +13,3 @@ ignore = true
 [dependencies]
 bindgen.workspace = true
 cmake.workspace = true
-regex.workspace = true

@@ -2,6 +2,8 @@
 
 #![no_std]
 
+extern crate aws_c_common_sys;
+
 mod bindings {
     #![allow(
         clippy::all,

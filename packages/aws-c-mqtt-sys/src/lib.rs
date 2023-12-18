@@ -2,7 +2,9 @@
 
 #![no_std]
 
+extern crate aws_c_common_sys;
 extern crate aws_c_http_sys;
+extern crate aws_c_io_sys;
 
 mod bindings {
     #![allow(

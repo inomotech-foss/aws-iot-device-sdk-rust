@@ -3,7 +3,11 @@
 
 #![no_std]
 
-// used internally
+extern crate aws_c_auth_sys;
+extern crate aws_c_common_sys;
+extern crate aws_c_http_sys;
+extern crate aws_c_io_sys;
+extern crate aws_c_sdkutils_sys;
 extern crate aws_checksums_sys;
 
 mod bindings {

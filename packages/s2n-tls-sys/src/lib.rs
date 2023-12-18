@@ -3,7 +3,6 @@
 
 #![no_std]
 
-// used internally
 extern crate aws_lc_sys;
 
 mod bindings {

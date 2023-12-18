@@ -2,6 +2,10 @@
 
 #![no_std]
 
+extern crate aws_c_common_sys;
+extern crate aws_c_io_sys;
+extern crate aws_checksums_sys;
+
 mod bindings {
     #![allow(
         clippy::all,
