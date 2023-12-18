@@ -2,7 +2,7 @@
 name = "aws-c-common-sys"
 version = "0.1.0+v0.9.10"
 links = "aws-c-common"
-publish = false
+publish.workspace = true
 authors.workspace = true
 edition.workspace = true
 rust-version.workspace = true

@@ -2,7 +2,7 @@
 name = "aws-c-mqtt-sys"
 version = "0.1.0+v0.10.0"
 links = "aws-c-mqtt"
-publish = false
+publish.workspace = true
 authors.workspace = true
 edition.workspace = true
 rust-version.workspace = true

@@ -12,6 +12,7 @@ authors = [
 edition = "2021"
 rust-version = "1.74"
 repository = "https://github.com/inomotech-foss/aws-iot-device-sdk-rust"
+publish = false
 
 [workspace.dependencies]
 aws-c-auth-sys = { path = "packages/aws-c-auth-sys" }
@@ -27,6 +28,7 @@ aws-c-mqtt-sys = { path = "packages/aws-c-mqtt-sys" }
 aws-c-s3-sys = { path = "packages/aws-c-s3-sys" }
 aws-c-sdkutils-sys = { path = "packages/aws-c-sdkutils-sys" }
 aws-checksums-sys = { path = "packages/aws-checksums-sys" }
+aws-crt-cpp-sys = { path = "packages/aws-crt-cpp-sys" }
 aws-lc-sys = { path = "packages/aws-lc-sys" }
 s2n-tls-sys = { path = "packages/s2n-tls-sys" }
 

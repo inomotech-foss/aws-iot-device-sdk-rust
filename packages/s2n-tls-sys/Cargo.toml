@@ -2,7 +2,7 @@
 name = "s2n-tls-sys"
 version = "0.1.0+v1.4.0"
 links = "s2n"
-publish = false
+publish.workspace = true
 authors.workspace = true
 edition.workspace = true
 rust-version.workspace = true

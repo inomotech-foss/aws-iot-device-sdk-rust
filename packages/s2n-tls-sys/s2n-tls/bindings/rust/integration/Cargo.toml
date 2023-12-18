@@ -3,7 +3,7 @@ name = "integration"
 version = "0.1.0"
 authors = ["AWS s2n"]
 edition = "2021"
-publish = false
+publish.workspace = true
 
 [dependencies]
 s2n-tls = { path = "../s2n-tls", features = ["testing"] }

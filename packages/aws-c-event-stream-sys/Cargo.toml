@@ -2,7 +2,7 @@
 name = "aws-c-event-stream-sys"
 version = "0.1.0+v0.3.2"
 links = "aws-c-event-stream"
-publish = false
+publish.workspace = true
 authors.workspace = true
 edition.workspace = true
 rust-version.workspace = true

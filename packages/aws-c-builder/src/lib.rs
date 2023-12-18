@@ -8,6 +8,7 @@ pub struct Config {
     link_libraries: Vec<String>,
     include_dir_names: Vec<String>,
     cmake_callback: Option<Box<dyn FnOnce(&mut cmake::Config)>>,
+    run_bindgen: bool,
     bindgen_callback: Option<Box<dyn FnOnce(bindgen::Builder) -> bindgen::Builder>>,
 }
 
@@ -21,6 +22,7 @@ impl Config {
             link_libraries,
             include_dir_names: Vec::new(),
             cmake_callback: None,
+            run_bindgen: true,
             bindgen_callback: None,
         }
     }
@@ -60,6 +62,11 @@ impl Config {
         self
     }
 
+    pub fn run_bindgen(&mut self, doit: bool) -> &mut Self {
+        self.run_bindgen = doit;
+        self
+    }
+
     pub fn bindgen_callback(
         &mut self,
         callback: impl FnOnce(bindgen::Builder) -> bindgen::Builder + 'static,
@@ -73,7 +80,9 @@ impl Config {
         let cmake_prefix_path = dependency_root_paths.join(";");
         println!("cargo:cmake_prefix_path={cmake_prefix_path}");
         let out_dir = self.compile(&cmake_prefix_path);
-        self.generate_bindings(&out_dir, &dependency_root_paths);
+        if self.run_bindgen {
+            self.generate_bindings(&out_dir, &dependency_root_paths);
+        }
     }
 
     fn compile(&mut self, cmake_prefix_path: &str) -> String {
@@ -82,6 +91,7 @@ impl Config {
         config
             .define("CMAKE_PREFIX_PATH", cmake_prefix_path)
             .define("AWS_ENABLE_LTO", "ON")
+            .define("BUILD_DEPS", "OFF")
             .define("BUILD_TESTING", "OFF");
 
         if let Some(cb) = self.cmake_callback.take() {

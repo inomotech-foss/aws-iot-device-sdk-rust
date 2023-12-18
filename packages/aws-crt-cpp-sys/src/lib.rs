@@ -1,0 +1,4 @@
+//! C++ wrapper around the aws-c-* libraries. Provides Cross-Platform Transport
+//! Protocols and SSL/TLS implementations for C++.
+
+#![no_std]

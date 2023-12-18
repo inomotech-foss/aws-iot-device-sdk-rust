@@ -2,7 +2,7 @@
 name = "aws-checksums-sys"
 version = "0.1.0+v0.1.17"
 links = "aws-checksums"
-publish = false
+publish.workspace = true
 authors.workspace = true
 edition.workspace = true
 rust-version.workspace = true

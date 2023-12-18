@@ -2,7 +2,7 @@
 name = "aws-c-io-sys"
 version = "0.1.0+v0.13.35"
 links = "aws-c-io"
-publish = false
+publish.workspace = true
 authors.workspace = true
 edition.workspace = true
 rust-version.workspace = true

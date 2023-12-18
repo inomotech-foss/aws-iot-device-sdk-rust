@@ -2,7 +2,7 @@
 name = "aws-lc-sys"
 version = "0.1.0+v1.18.0"
 links = "aws-lc"
-publish = false
+publish.workspace = true
 authors.workspace = true
 edition.workspace = true
 rust-version.workspace = true

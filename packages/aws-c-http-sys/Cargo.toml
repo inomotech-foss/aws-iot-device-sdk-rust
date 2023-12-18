@@ -2,7 +2,7 @@
 name = "aws-c-http-sys"
 version = "0.1.0+v0.7.14"
 links = "aws-c-http"
-publish = false
+publish.workspace = true
 authors.workspace = true
 edition.workspace = true
 rust-version.workspace = true

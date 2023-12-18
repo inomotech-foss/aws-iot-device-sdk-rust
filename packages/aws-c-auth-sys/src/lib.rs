@@ -17,7 +17,9 @@ mod bindings {
         rustdoc::all
     )]
 
+    use aws_c_cal_sys::*;
     use aws_c_common_sys::*;
+    use aws_c_http_sys::*;
     use aws_c_io_sys::*;
 
     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
