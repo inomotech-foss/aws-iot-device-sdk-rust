@@ -2,11 +2,12 @@
 name = "aws-crt-cpp-sys"
 version = "0.1.0+v0.25.0"
 links = "aws-crt-cpp"
-publish.workspace = true
 authors.workspace = true
 edition.workspace = true
-rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
 repository.workspace = true
+rust-version.workspace = true
 
 [dependencies]
 aws-c-auth-sys.workspace = true

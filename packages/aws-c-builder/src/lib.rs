@@ -2,12 +2,14 @@
 
 use std::path::PathBuf;
 
+type CmakeCallbackFn = Box<dyn FnOnce(&mut cmake::Config)>;
+
 pub struct Config {
     lib_name: String,
     aws_dependencies: Vec<String>,
     link_libraries: Vec<String>,
     bindgen_blanket_include_dirs: Vec<String>,
-    cmake_callback: Option<Box<dyn FnOnce(&mut cmake::Config)>>,
+    cmake_callback: Option<CmakeCallbackFn>,
     run_bindgen: bool,
     bindgen_callback: Option<Box<dyn FnOnce(bindgen::Builder) -> bindgen::Builder>>,
 }

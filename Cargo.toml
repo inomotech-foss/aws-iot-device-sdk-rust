@@ -10,6 +10,7 @@ authors = [
     "Simon Berger <simon.berger@inomotech.com>",
 ]
 edition = "2021"
+license = "MIT OR Apache-2.0"
 rust-version = "1.74"
 repository = "https://github.com/inomotech-foss/aws-iot-device-sdk-rust"
 publish = false
