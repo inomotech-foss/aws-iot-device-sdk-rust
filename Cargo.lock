@@ -97,6 +97,8 @@ version = "0.1.0+v0.1.18"
 dependencies = [
  "aws-c-builder",
  "aws-c-common-sys",
+ "aws-c-http-sys",
+ "aws-c-io-sys",
  "aws-c-mqtt-sys",
 ]
 
@@ -117,7 +119,9 @@ dependencies = [
  "aws-c-auth-sys",
  "aws-c-builder",
  "aws-c-common-sys",
+ "aws-c-http-sys",
  "aws-c-io-sys",
+ "aws-c-sdkutils-sys",
  "aws-checksums-sys",
 ]
 

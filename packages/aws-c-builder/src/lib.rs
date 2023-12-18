@@ -1,12 +1,12 @@
 //! Build script dependency for all related aws c library packages.
 
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 pub struct Config {
     lib_name: String,
     aws_dependencies: Vec<String>,
     link_libraries: Vec<String>,
-    include_dir_names: Vec<String>,
+    bindgen_blanket_include_dirs: Vec<String>,
     cmake_callback: Option<Box<dyn FnOnce(&mut cmake::Config)>>,
     run_bindgen: bool,
     bindgen_callback: Option<Box<dyn FnOnce(bindgen::Builder) -> bindgen::Builder>>,
@@ -20,7 +20,7 @@ impl Config {
             lib_name,
             aws_dependencies: Vec::new(),
             link_libraries,
-            include_dir_names: Vec::new(),
+            bindgen_blanket_include_dirs: Vec::new(),
             cmake_callback: None,
             run_bindgen: true,
             bindgen_callback: None,
@@ -45,12 +45,13 @@ impl Config {
         self
     }
 
-    pub fn include_dir_names<I>(&mut self, names: I) -> &mut Self
+    pub fn bindgen_blanket_include_dirs<I>(&mut self, names: I) -> &mut Self
     where
         I: IntoIterator,
         I::Item: AsRef<str>,
     {
-        self.include_dir_names = names.into_iter().map(|s| s.as_ref().to_owned()).collect();
+        self.bindgen_blanket_include_dirs =
+            names.into_iter().map(|s| s.as_ref().to_owned()).collect();
         self
     }
 
@@ -107,9 +108,6 @@ impl Config {
     }
 
     fn generate_bindings(&mut self, lib_root: &str, dependency_root_paths: &[String]) {
-        let fwd_decls =
-            CForwardDeclarationSniffer::new().find_in_directory(format!("{lib_root}/include"));
-
         let include_args = std::iter::once(lib_root)
             .chain(dependency_root_paths.iter().map(String::as_str))
             .map(|path| format!("-I{path}/include"));
@@ -129,11 +127,8 @@ impl Config {
         if let Some(cb) = self.bindgen_callback.take() {
             builder = cb(builder);
         }
-        for name in &self.include_dir_names {
+        for name in &self.bindgen_blanket_include_dirs {
             builder = builder.allowlist_file(format!(".*/{name}/[^/]+\\.h"));
-        }
-        for fwd_decl in fwd_decls {
-            builder = builder.blocklist_type(fwd_decl);
         }
 
         let bindings = builder.generate().unwrap();
@@ -179,56 +174,4 @@ pub fn is_linux_like() -> bool {
     // anything unix that isn't macos is considered "Linux" by AWS
     std::env::var("CARGO_CFG_TARGET_FAMILY").unwrap() == "unix"
         && std::env::var("CARGO_CFG_TARGET_OS").unwrap() != "macos"
-}
-
-struct CForwardDeclarationSniffer {
-    re: regex::bytes::Regex,
-}
-
-impl CForwardDeclarationSniffer {
-    fn new() -> Self {
-        Self {
-            re: regex::bytes::RegexBuilder::new(r"^struct (\w+);\s*$")
-                .multi_line(true)
-                .build()
-                .unwrap(),
-        }
-    }
-
-    fn find_in_code(&self, code: &[u8]) -> Vec<String> {
-        self.re
-            .captures_iter(code)
-            .map(|m| {
-                let raw = m.get(1).unwrap().as_bytes();
-                String::from_utf8(raw.to_owned()).unwrap()
-            })
-            .collect()
-    }
-
-    fn find_in_file(&self, file: impl AsRef<Path>) -> Vec<String> {
-        let code = std::fs::read(file).unwrap();
-        self.find_in_code(&code)
-    }
-
-    fn find_in_directory(&self, dir: impl AsRef<Path>) -> Vec<String> {
-        let mut decls = Vec::new();
-        for entry in dir.as_ref().read_dir().unwrap() {
-            let entry = entry.unwrap();
-            let file_type = entry.file_type().unwrap();
-            if file_type.is_dir() {
-                decls.extend(self.find_in_directory(entry.path()));
-                continue;
-            }
-
-            let file_name = entry.file_name().into_string().unwrap();
-            if !file_name.ends_with(".h") {
-                continue;
-            }
-
-            decls.extend(self.find_in_file(entry.path()));
-            decls.sort_unstable();
-            decls.dedup();
-        }
-        decls
-    }
 }

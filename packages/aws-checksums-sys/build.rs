@@ -1,6 +1,6 @@
 fn main() {
     aws_c_builder::Config::new("aws-checksums")
         .aws_dependencies(&["AWS_C_COMMON"])
-        .include_dir_names(&["checksums"])
+        .bindgen_callback(|builder| builder.allowlist_item("aws_checksums.*"))
         .build()
 }

@@ -3,6 +3,9 @@
 
 #![no_std]
 
+// used internally
+extern crate aws_checksums_sys;
+
 mod bindings {
     #![allow(
         clippy::all,
@@ -14,7 +17,9 @@ mod bindings {
 
     use aws_c_auth_sys::*;
     use aws_c_common_sys::*;
+    use aws_c_http_sys::*;
     use aws_c_io_sys::*;
+    use aws_c_sdkutils_sys::*;
 
     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 }

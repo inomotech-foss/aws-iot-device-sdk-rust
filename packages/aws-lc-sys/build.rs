@@ -7,7 +7,7 @@ fn main() {
                 .define("DISABLE_GO", "ON");
         })
         .link_libraries(&["crypto", "ssl"])
-        .include_dir_names(&["openssl"])
+        .bindgen_blanket_include_dirs(&["openssl"])
         .bindgen_callback(|builder| {
             builder
                 .blocklist_item("BIO_vsnprintf")

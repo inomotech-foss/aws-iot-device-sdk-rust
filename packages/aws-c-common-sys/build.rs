@@ -1,6 +1,6 @@
 fn main() {
     aws_c_builder::Config::new("aws-c-common")
-        .include_dir_names(&["common"])
+        .bindgen_blanket_include_dirs(&["common"])
         .bindgen_callback(|builder| {
             builder
                 .opaque_type("aws_hash_table")

@@ -1,5 +1,5 @@
 fn main() {
-    aws_c_builder::Config::new("s2n-tls")
+    aws_c_builder::Config::new("s2n")
         .aws_dependencies(&["AWS_LC"])
         .cmake_callback(|config| {
             config

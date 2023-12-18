@@ -6,6 +6,14 @@ fn main() {
 
     aws_c_builder::Config::new("aws-c-cal")
         .aws_dependencies(aws_deps)
-        .include_dir_names(&["cal"])
+        .bindgen_callback(|builder| {
+            builder
+                .allowlist_item("aws_cal.*")
+                .allowlist_item("aws_ecc.*")
+                .allowlist_item("aws_hash.*")
+                .allowlist_item("aws_hmac.*")
+                .allowlist_item("aws_rsa.*")
+                .allowlist_item("aws_symmetric.*")
+        })
         .build()
 }
