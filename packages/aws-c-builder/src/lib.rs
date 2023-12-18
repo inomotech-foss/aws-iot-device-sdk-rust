@@ -1,6 +1,6 @@
 //! Build script dependency for all related aws c library packages.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 pub struct Config {
     lib_name: String,
@@ -107,6 +107,9 @@ impl Config {
     }
 
     fn generate_bindings(&mut self, lib_root: &str, dependency_root_paths: &[String]) {
+        let fwd_decls =
+            CForwardDeclarationSniffer::new().find_in_directory(format!("{lib_root}/include"));
+
         let include_args = std::iter::once(lib_root)
             .chain(dependency_root_paths.iter().map(String::as_str))
             .map(|path| format!("-I{path}/include"));
@@ -128,6 +131,9 @@ impl Config {
         }
         for name in &self.include_dir_names {
             builder = builder.allowlist_file(format!(".*/{name}/[^/]+\\.h"));
+        }
+        for fwd_decl in fwd_decls {
+            builder = builder.blocklist_type(fwd_decl);
         }
 
         let bindings = builder.generate().unwrap();
@@ -173,4 +179,56 @@ pub fn is_linux_like() -> bool {
     // anything unix that isn't macos is considered "Linux" by AWS
     std::env::var("CARGO_CFG_TARGET_FAMILY").unwrap() == "unix"
         && std::env::var("CARGO_CFG_TARGET_OS").unwrap() != "macos"
+}
+
+struct CForwardDeclarationSniffer {
+    re: regex::bytes::Regex,
+}
+
+impl CForwardDeclarationSniffer {
+    fn new() -> Self {
+        Self {
+            re: regex::bytes::RegexBuilder::new(r"^struct (\w+);\s*$")
+                .multi_line(true)
+                .build()
+                .unwrap(),
+        }
+    }
+
+    fn find_in_code(&self, code: &[u8]) -> Vec<String> {
+        self.re
+            .captures_iter(code)
+            .map(|m| {
+                let raw = m.get(1).unwrap().as_bytes();
+                String::from_utf8(raw.to_owned()).unwrap()
+            })
+            .collect()
+    }
+
+    fn find_in_file(&self, file: impl AsRef<Path>) -> Vec<String> {
+        let code = std::fs::read(file).unwrap();
+        self.find_in_code(&code)
+    }
+
+    fn find_in_directory(&self, dir: impl AsRef<Path>) -> Vec<String> {
+        let mut decls = Vec::new();
+        for entry in dir.as_ref().read_dir().unwrap() {
+            let entry = entry.unwrap();
+            let file_type = entry.file_type().unwrap();
+            if file_type.is_dir() {
+                decls.extend(self.find_in_directory(entry.path()));
+                continue;
+            }
+
+            let file_name = entry.file_name().into_string().unwrap();
+            if !file_name.ends_with(".h") {
+                continue;
+            }
+
+            decls.extend(self.find_in_file(entry.path()));
+            decls.sort_unstable();
+            decls.dedup();
+        }
+        decls
+    }
 }

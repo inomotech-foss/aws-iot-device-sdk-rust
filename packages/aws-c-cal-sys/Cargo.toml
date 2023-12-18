@@ -12,10 +12,10 @@ repository.workspace = true
 aws-c-common-sys.workspace = true
 
 [target.'cfg(windows)'.dependencies]
-schannel = "0.1"
+schannel.workspace = true
 
 [target.'cfg(target_os = "macos")'.dependencies]
-security-framework = "2"
+security-framework.workspace = true
 
 [target.'cfg(all(unix, not(target_os = "macos")))'.dependencies]
 aws-lc-sys.workspace = true

@@ -35,3 +35,6 @@ s2n-tls-sys = { path = "packages/s2n-tls-sys" }
 bindgen = "0.69"
 cmake = "0.1"
 libc = "0.2"
+regex = "1"
+schannel = "0.1"
+security-framework = "2"
