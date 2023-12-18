@@ -81,7 +81,7 @@ dependencies = [
 
 [[package]]
 name = "aws-c-io-sys"
-version = "0.1.0+v0.13.35"
+version = "0.1.0+v0.13.36"
 dependencies = [
  "aws-c-builder",
  "aws-c-cal-sys",
