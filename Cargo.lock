@@ -47,6 +47,7 @@ name = "aws-c-common-sys"
 version = "0.1.0+v0.9.10"
 dependencies = [
  "aws-c-builder",
+ "core-foundation",
  "libc",
 ]
 
