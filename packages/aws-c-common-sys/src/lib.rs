@@ -13,6 +13,9 @@ mod bindings {
         non_upper_case_globals,
         rustdoc::all
     )]
+
+    #[cfg(target_os = "macos")]
+    use core_foundation::base::CFAllocatorRef;
     use libc::*;
 
     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
