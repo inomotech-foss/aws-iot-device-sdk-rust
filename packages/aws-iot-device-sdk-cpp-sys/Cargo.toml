@@ -9,8 +9,21 @@ publish.workspace = true
 repository.workspace = true
 rust-version.workspace = true
 
+[package.metadata.aws-c-builder]
+include_patterns = [
+    "devicedefender/",
+    "discovery/",
+    "eventstream_rpc/",
+    "greengrass_ipc/",
+    "identity/",
+    "iotdevicecommon/",
+    "jobs/",
+    "secure_tunneling/",
+    "shadow/",
+]
+
 [dependencies]
-aws-c-iot-sys.workspace= true
+aws-c-iot-sys.workspace = true
 aws-crt-cpp-sys.workspace = true
 
 [build-dependencies]

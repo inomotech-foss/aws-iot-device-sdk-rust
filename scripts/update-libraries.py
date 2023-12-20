@@ -1,7 +1,9 @@
 import argparse
 import dataclasses
+import itertools
 import shutil
 import subprocess
+import tempfile
 import tomllib
 from pathlib import Path
 from typing import Literal, Self
@@ -15,6 +17,7 @@ class CargoPackage:
     class BuilderMeta:
         ignore: bool = False
         repo: str | None = None
+        include_patterns: list[str] = dataclasses.field(default_factory=list)
 
     cargo_path: Path
     name: str
@@ -37,6 +40,7 @@ class CargoPackage:
         else:
             builder_meta.ignore = bool(builder_meta_data.get("ignore", False))
             builder_meta.repo = builder_meta_data.get("repo")
+            builder_meta.include_patterns = builder_meta_data.get("include_patterns")
 
         return cls(
             cargo_path=cargo_path,
@@ -55,30 +59,47 @@ class CargoPackage:
         return repo_tag
 
 
-def _apply_package_code(package: CargoPackage) -> None:
+_DEFAULT_INCLUDE_PATTERNS: list[str] = [
+    "cmake/",
+    "CMakeLists.txt",
+    "include/",
+    "LICENSE",
+    "source/",
+    "VERSION",
+]
+
+
+def _apply_package_code(package: CargoPackage, temp_dir: Path) -> None:
     assert package.links
 
     repo_tag = package.get_repo_tag()
-    lib_dir = package.cargo_path.parent / package.links
-    if lib_dir.exists():
-        shutil.rmtree(lib_dir)
-
     subprocess.run(
         [
             "git",
             "-c",
             "advice.detachedHead=false",
             "clone",
+            "--quiet",
             f"--branch={repo_tag}",
             "--depth=1",
             "--",
             package.get_repo_url(),
-            lib_dir,
+            str(temp_dir),
         ],
         check=True,
         cwd=_PROJECT_DIR,
     )
-    shutil.rmtree(lib_dir / ".git")
+
+    lib_dir = package.cargo_path.parent / package.links
+    if lib_dir.exists():
+        shutil.rmtree(lib_dir)
+
+    for pattern in itertools.chain(
+        _DEFAULT_INCLUDE_PATTERNS, package.builder_meta.include_patterns
+    ):
+        for path in temp_dir.glob(pattern):
+            dst = lib_dir / path.relative_to(temp_dir)
+            shutil.move(path, dst)
 
 
 def _check_package_update(package: CargoPackage) -> None:
@@ -139,7 +160,8 @@ def main() -> None:
                 continue
 
             if op == "apply":
-                _apply_package_code(package)
+                with tempfile.TemporaryDirectory() as temp_dir:
+                    _apply_package_code(package, Path(temp_dir))
             else:
                 _check_package_update(package)
         except Exception:
