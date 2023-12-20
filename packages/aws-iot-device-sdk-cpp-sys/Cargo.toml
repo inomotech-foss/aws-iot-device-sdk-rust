@@ -10,6 +10,7 @@ repository.workspace = true
 rust-version.workspace = true
 
 [package.metadata.aws-c-builder]
+enable = true
 include_patterns = [
     "devicedefender/",
     "discovery/",

@@ -15,7 +15,7 @@ _PROJECT_DIR = (Path(__file__) / "../..").resolve()
 class CargoPackage:
     @dataclasses.dataclass(slots=True, kw_only=True)
     class BuilderMeta:
-        ignore: bool = False
+        enable: bool = False
         repo: str | None = None
         include_patterns: list[str] = dataclasses.field(default_factory=list)
 
@@ -38,7 +38,8 @@ class CargoPackage:
         except KeyError:
             pass
         else:
-            builder_meta.ignore = bool(builder_meta_data.get("ignore", False))
+            # if aws-c-builder is present the default value for enable is True!
+            builder_meta.enable = bool(builder_meta_data.get("enable", True))
             builder_meta.repo = builder_meta_data.get("repo")
             builder_meta.include_patterns = builder_meta_data.get("include_patterns")
 
@@ -156,9 +157,10 @@ def main() -> None:
 
         try:
             package = CargoPackage.load(package_path / "Cargo.toml")
-            if package.builder_meta.ignore:
+            if not package.builder_meta.enable:
                 continue
 
+            print(f"package: {package.name}")
             if op == "apply":
                 with tempfile.TemporaryDirectory() as temp_dir:
                     _apply_package_code(package, Path(temp_dir))

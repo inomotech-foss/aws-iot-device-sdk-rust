@@ -8,9 +8,6 @@ publish.workspace = true
 repository.workspace = true
 rust-version.workspace = true
 
-[package.metadata.aws-c-builder]
-ignore = true
-
 [dependencies]
 bindgen.workspace = true
 cmake.workspace = true

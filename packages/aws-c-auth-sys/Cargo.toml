@@ -9,6 +9,9 @@ publish.workspace = true
 repository.workspace = true
 rust-version.workspace = true
 
+[package.metadata.aws-c-builder]
+enable = true
+
 [dependencies]
 aws-c-cal-sys.workspace = true
 aws-c-common-sys.workspace = true
