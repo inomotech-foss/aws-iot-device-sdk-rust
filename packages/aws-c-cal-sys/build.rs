@@ -8,12 +8,12 @@ fn main() {
         .aws_dependencies(aws_deps)
         .bindgen_callback(|builder| {
             builder
-                .allowlist_item("aws_cal.*")
-                .allowlist_item("aws_ecc.*")
-                .allowlist_item("aws_hash.*")
-                .allowlist_item("aws_hmac.*")
-                .allowlist_item("aws_rsa.*")
-                .allowlist_item("aws_symmetric.*")
+                .allowlist_item("(?i)aws_(c_)?cal.*")
+                .allowlist_item("(?i)aws_ecc.*")
+                .allowlist_item("(?i)aws_hash.*")
+                .allowlist_item("(?i)aws_hmac.*")
+                .allowlist_item("(?i)aws_rsa.*")
+                .allowlist_item("(?i)aws_symmetric.*")
         })
         .build()
 }

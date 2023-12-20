@@ -3,10 +3,10 @@ fn main() {
         .aws_dependencies(&["AWS_C_COMPRESSION", "AWS_C_IO"])
         .bindgen_callback(|builder| {
             builder
-                .allowlist_item("aws_crt.+http.*")
-                .allowlist_item("aws_http.*")
-                .allowlist_item("aws_websocket.*")
-                .allowlist_item("proxy_env_var_settings")
+                .allowlist_item("(?i)aws_crt.+http.*")
+                .allowlist_item("(?i)aws_(c_)?http.*")
+                .allowlist_item("(?i)aws_websocket.*")
+                .allowlist_type("proxy_env_var_settings")
         })
         .build()
 }

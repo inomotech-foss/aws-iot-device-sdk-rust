@@ -119,10 +119,6 @@ impl Config {
             .allowlist_recursively(false)
             .array_pointers_in_arguments(true)
             .enable_function_attribute_detection()
-            .default_enum_style(bindgen::EnumVariation::NewType {
-                is_bitfield: false,
-                is_global: true,
-            })
             .generate_cstr(true)
             .merge_extern_blocks(true)
             .prepend_enum_name(false)

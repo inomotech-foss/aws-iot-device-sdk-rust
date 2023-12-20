@@ -3,11 +3,11 @@ fn main() {
         .aws_dependencies(&["AWS_C_COMMON", "AWS_C_HTTP", "AWS_C_SDKUTILS"])
         .bindgen_callback(|builder| {
             builder
-                .allowlist_item("aws_auth.*")
-                .allowlist_item("aws_cognito.*")
-                .allowlist_item("aws_credentials.*")
-                .allowlist_item("aws_imds.*")
-                .allowlist_item("aws_sign.*")
+                .allowlist_item("(?i)aws_(c_)?auth.*")
+                .allowlist_item("(?i)aws_cognito.*")
+                .allowlist_item("(?i)aws_credentials.*")
+                .allowlist_item("(?i)aws_imds.*")
+                .allowlist_item("(?i)aws_sign.*")
                 .allowlist_type("aws_should_sign_header_fn")
                 .allowlist_type("aws.+credentials.+_fn")
         })

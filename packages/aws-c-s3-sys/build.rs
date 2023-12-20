@@ -10,7 +10,7 @@ fn main() {
         ])
         .bindgen_callback(|builder| {
             builder
-                .allowlist_item("aws_s3.*")
+                .allowlist_item("(?i)aws_(c_)?s3.*")
                 .allowlist_type("aws_credentials_properties_s3express")
         })
         .build()

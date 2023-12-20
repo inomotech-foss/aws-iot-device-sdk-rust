@@ -3,8 +3,8 @@ fn main() {
         .aws_dependencies(&["AWS_C_MQTT"])
         .bindgen_callback(|builder| {
             builder
-                .allowlist_item("aws_iotdevice.*")
-                .allowlist_item("aws_secure_tunnel.*")
+                .allowlist_item("(?i)aws_(c_)?iotdevice.*")
+                .allowlist_item("(?i)aws_secure_tunnel.*")
         })
         .build()
 }

@@ -3,8 +3,8 @@ fn main() {
         .aws_dependencies(&["AWS_C_HTTP"])
         .bindgen_callback(|builder| {
             builder
-                .allowlist_item("aws_mqtt.*")
-                .allowlist_item("on_connection_closed_data")
+                .allowlist_item("(?i)aws_(c_)?mqtt.*")
+                .allowlist_type("on_connection_closed_data")
         })
         .build()
 }
