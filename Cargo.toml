@@ -29,6 +29,7 @@ aws-c-mqtt-sys = { path = "packages/aws-c-mqtt-sys" }
 aws-c-s3-sys = { path = "packages/aws-c-s3-sys" }
 aws-c-sdkutils-sys = { path = "packages/aws-c-sdkutils-sys" }
 aws-checksums-sys = { path = "packages/aws-checksums-sys" }
+aws-crt = { path = "packages/aws-crt" }
 aws-crt-cpp-sys = { path = "packages/aws-crt-cpp-sys" }
 
 aws-lc-sys = "0.12"
@@ -36,6 +37,7 @@ bindgen = "0.69"
 cmake = "0.1"
 core-foundation = "0.9"
 libc = "0.2"
+log = "0.4"
 s2n-tls-sys  = "0.1.0"
 schannel = "0.1"
 security-framework = "2"

@@ -142,6 +142,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "aws-crt"
+version = "0.1.0"
+dependencies = [
+ "aws-c-auth-sys",
+ "aws-c-cal-sys",
+ "aws-c-common-sys",
+ "aws-c-compression-sys",
+ "aws-c-event-stream-sys",
+ "aws-c-http-sys",
+ "aws-c-io-sys",
+ "aws-c-iot-sys",
+ "aws-c-mqtt-sys",
+ "aws-c-s3-sys",
+ "aws-c-sdkutils-sys",
+ "log",
+]
+
+[[package]]
 name = "aws-crt-cpp-sys"
 version = "0.1.0+v0.25.0"
 dependencies = [
