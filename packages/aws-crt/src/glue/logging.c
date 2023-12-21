@@ -29,11 +29,11 @@ s_acglu_format_to_string(struct aws_allocator *allocator, const char *format,
   }
 
 #ifdef _WIN32
-  int written_count =
-      vsnprintf_s(raw_string->bytes, required_length, _TRUNCATE, format, args);
+  int written_count = vsnprintf_s((char *)raw_string->bytes, required_length,
+                                  _TRUNCATE, format, args);
 #else
   int written_count =
-      vsnprintf(raw_string->bytes, required_length, format, args);
+      vsnprintf((char *)raw_string->bytes, required_length, format, args);
 #endif /* _WIN32 */
   if (written_count < 0) {
     aws_string_destroy(raw_string);

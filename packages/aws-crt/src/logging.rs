@@ -1,14 +1,13 @@
-use alloc::borrow::Cow;
-use alloc::boxed::Box;
-use alloc::format;
-use core::ffi::CStr;
-use core::ops::RangeInclusive;
+use std::borrow::Cow;
+use std::ffi::CStr;
+use std::mem::MaybeUninit;
+use std::ops::RangeInclusive;
 
 use aws_c_auth_sys::AWS_C_AUTH_PACKAGE_ID;
 use aws_c_cal_sys::AWS_C_CAL_PACKAGE_ID;
 use aws_c_common_sys::{
-    aws_log_subject_name, aws_log_subject_t, aws_logger, aws_logger_clean_up, aws_logger_set,
-    AWS_C_COMMON_PACKAGE_ID, AWS_LOG_SUBJECT_STRIDE_BITS,
+    aws_log_subject_name, aws_log_subject_t, aws_logger, aws_logger_set, AWS_C_COMMON_PACKAGE_ID,
+    AWS_LOG_SUBJECT_STRIDE_BITS,
 };
 use aws_c_compression_sys::AWS_C_COMPRESSION_PACKAGE_ID;
 use aws_c_event_stream_sys::AWS_C_EVENT_STREAM_PACKAGE_ID;
@@ -19,7 +18,18 @@ use aws_c_mqtt_sys::AWS_C_MQTT_PACKAGE_ID;
 use aws_c_s3_sys::AWS_C_S3_PACKAGE_ID;
 use aws_c_sdkutils_sys::AWS_C_SDKUTILS_PACKAGE_ID;
 
+use crate::AllocatorRef;
+
 mod subject_tree;
+
+/// # Safety
+///
+/// Must only be called once.
+pub unsafe fn init_unchecked_racy(allocator: AllocatorRef) {
+    static mut LOGGER: MaybeUninit<aws_logger> = MaybeUninit::uninit();
+    LOGGER.write(crate::glue::logging::create_logger(allocator));
+    unsafe { aws_logger_set(LOGGER.as_mut_ptr()) };
+}
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
@@ -38,7 +48,7 @@ impl Subject {
         unsafe { CStr::from_ptr(aws_log_subject_name(self.0)) }
     }
 
-    fn dynamic_target(self) -> alloc::string::String {
+    fn dynamic_target(self) -> String {
         format!("aws::{}", self.subject_name().to_bytes().escape_ascii())
     }
 

@@ -1,0 +1,187 @@
+use std::ffi::{c_int, c_void};
+
+use aws_c_common_sys::aws_byte_cursor;
+use aws_c_mqtt_sys::{
+    aws_mqtt_client_connection, aws_mqtt_client_connection_connect,
+    aws_mqtt_client_connection_disconnect, aws_mqtt_client_connection_publish,
+    aws_mqtt_client_connection_set_login, aws_mqtt_client_connection_set_reconnect_timeout,
+    aws_mqtt_client_connection_set_will, aws_mqtt_client_connection_subscribe,
+    aws_mqtt_connection_options,
+};
+pub use aws_c_mqtt_sys::{
+    aws_mqtt_qos, AWS_MQTT_QOS_AT_LEAST_ONCE, AWS_MQTT_QOS_AT_MOST_ONCE, AWS_MQTT_QOS_EXACTLY_ONCE,
+};
+
+pub use self::futures::{PacketFuture, TaskFuture};
+use self::subscribe::PublishCallback;
+pub use self::subscribe::SubscribeAck;
+use crate::{ByteCursor, Error, Result};
+
+mod futures;
+mod subscribe;
+
+pub struct Connection {}
+
+impl Connection {
+    pub fn as_mut_ptr(&mut self) -> *mut aws_mqtt_client_connection {
+        todo!()
+    }
+
+    pub fn set_will(
+        &mut self,
+        topic: &str,
+        qos: aws_mqtt_qos,
+        retain: bool,
+        payload: &[u8],
+    ) -> Result<()> {
+        let topic = ByteCursor::from_str(topic);
+        let payload = ByteCursor::from_slice(payload);
+        Error::check_rc(unsafe {
+            aws_mqtt_client_connection_set_will(
+                self.as_mut_ptr(),
+                topic.as_ptr(),
+                qos,
+                retain,
+                payload.as_ptr(),
+            )
+        })
+    }
+
+    pub fn set_login(&mut self, username: &str, password: &str) -> Result<()> {
+        let username = ByteCursor::from_str(username);
+        let password = ByteCursor::from_str(password);
+        Error::check_rc(unsafe {
+            aws_mqtt_client_connection_set_login(
+                self.as_mut_ptr(),
+                username.as_ptr(),
+                password.as_ptr(),
+            )
+        })
+    }
+
+    pub fn set_reconnect_timeout(&mut self, min_seconds: u64, max_seconds: u64) -> Result<()> {
+        Error::check_rc(unsafe {
+            aws_mqtt_client_connection_set_reconnect_timeout(
+                self.as_mut_ptr(),
+                min_seconds,
+                max_seconds,
+            )
+        })
+    }
+
+    pub fn connect(
+        &mut self,
+        client_id: &str,
+        clean_session: bool,
+        keep_alive_time_secs: u16,
+        ping_timeout_ms: u32,
+        protocol_operation_timeout_ms: u32,
+    ) -> Result<()> {
+        let options = aws_mqtt_connection_options {
+            host_name: todo!(),
+            port: todo!(),
+            socket_options: todo!(),
+            tls_options: todo!(),
+            client_id: ByteCursor::from_str(client_id).into_inner(),
+            keep_alive_time_secs,
+            ping_timeout_ms,
+            protocol_operation_timeout_ms,
+            on_connection_complete: todo!(),
+            user_data: todo!(),
+            clean_session,
+        };
+        Error::check_rc(unsafe { aws_mqtt_client_connection_connect(self.as_mut_ptr(), &options) })
+    }
+
+    pub fn disconnect(&mut self) -> TaskFuture {
+        unsafe extern "C" fn on_disconnect(
+            _connection: *mut aws_mqtt_client_connection,
+            userdata: *mut c_void,
+        ) {
+            TaskFuture::resolve(userdata, Ok(()));
+        }
+
+        let (resolver, fut) = crate::future::create();
+        let res = Error::check_rc(unsafe {
+            aws_mqtt_client_connection_disconnect(
+                self.as_mut_ptr(),
+                Some(on_disconnect),
+                resolver.into_raw(),
+            )
+        });
+        TaskFuture::create(res, fut)
+    }
+
+    pub fn publish(
+        &mut self,
+        topic: &str,
+        qos: aws_mqtt_qos,
+        retain: bool,
+        payload: &[u8],
+    ) -> PacketFuture<()> {
+        unsafe extern "C" fn on_complete(
+            _connection: *mut aws_mqtt_client_connection,
+            _packet_id: u16,
+            error_code: c_int,
+            userdata: *mut c_void,
+        ) {
+            PacketFuture::<()>::resolve_with_error_code(userdata, error_code);
+        }
+
+        let topic = ByteCursor::from_str(topic);
+        let payload = ByteCursor::from_slice(payload);
+        let (resolver, fut) = crate::future::create();
+        let packet_id = unsafe {
+            aws_mqtt_client_connection_publish(
+                self.as_mut_ptr(),
+                topic.as_ptr(),
+                qos,
+                retain,
+                payload.as_ptr(),
+                Some(on_complete),
+                resolver.into_raw(),
+            )
+        };
+        PacketFuture::create(packet_id, fut)
+    }
+
+    fn subscribe_impl(
+        &mut self,
+        topic_filter: &str,
+        qos: aws_mqtt_qos,
+        publish_callback: PublishCallback,
+    ) -> PacketFuture<SubscribeAck> {
+        unsafe extern "C" fn on_suback(
+            _connection: *mut aws_mqtt_client_connection,
+            _packet_id: u16,
+            _topic: *const aws_byte_cursor,
+            qos: aws_mqtt_qos,
+            error_code: c_int,
+            userdata: *mut c_void,
+        ) {
+            let res = Error::check_rc(error_code).map(|()| SubscribeAck { granted_qos: qos });
+            PacketFuture::<SubscribeAck>::resolve(userdata, res);
+        }
+
+        let topic_filter = ByteCursor::from_str(topic_filter);
+        let (resolver, fut) = crate::future::create();
+        let packet_id = unsafe {
+            aws_mqtt_client_connection_subscribe(
+                self.as_mut_ptr(),
+                topic_filter.as_ptr(),
+                qos,
+                publish_callback.on_publish,
+                publish_callback.userdata,
+                publish_callback.cleanup_userdata,
+                Some(on_suback),
+                resolver.into_raw(),
+            )
+        };
+        if packet_id == 0 {
+            // SAFETY: if the call fails the userdata isn't cleaned up so we manually call
+            // the cleanup function here.
+            unsafe { publish_callback.cleanup() };
+        }
+        PacketFuture::create(packet_id, fut)
+    }
+}

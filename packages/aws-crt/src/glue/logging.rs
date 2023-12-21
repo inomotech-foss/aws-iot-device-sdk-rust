@@ -1,19 +1,19 @@
-use core::ffi::{c_char, c_int, c_void};
+use std::ffi::{c_char, c_int, c_void};
 
 use aws_c_common_sys::{
-    aws_allocator, aws_log_level, aws_log_subject_t, aws_logger, aws_logger_vtable, AWS_LL_DEBUG,
-    AWS_LL_ERROR, AWS_LL_FATAL, AWS_LL_INFO, AWS_LL_TRACE, AWS_LL_WARN, AWS_OP_SUCCESS,
+    aws_log_level, aws_log_subject_t, aws_logger, aws_logger_vtable, AWS_LL_DEBUG, AWS_LL_ERROR,
+    AWS_LL_FATAL, AWS_LL_INFO, AWS_LL_TRACE, AWS_LL_WARN, AWS_OP_SUCCESS,
 };
 
 use crate::logging::Subject;
-use crate::string::String;
+use crate::{AllocatorRef, AwsString};
 
-pub const fn create_logger(allocator: *mut aws_allocator) -> aws_logger {
-    const VTABLE: aws_logger_vtable = create_vtable();
+pub fn create_logger(allocator: AllocatorRef) -> aws_logger {
+    static VTABLE: aws_logger_vtable = create_vtable();
     aws_logger {
         vtable: (&VTABLE as *const aws_logger_vtable).cast_mut(),
-        allocator,
-        p_impl: core::ptr::null_mut(),
+        allocator: allocator.as_ptr(),
+        p_impl: std::ptr::null_mut(),
     }
 }
 
@@ -72,7 +72,7 @@ extern "C" fn arglu_log(
     _p_impl: *mut c_void,
     log_level: aws_log_level,
     subject: Subject,
-    message: String,
+    message: AwsString,
 ) -> c_int {
     let target = subject.target();
     log::log!(target: &target, aws_level_to_log(log_level), "{}", message);

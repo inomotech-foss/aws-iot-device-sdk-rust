@@ -20,4 +20,9 @@ aws-c-iot-sys.workspace = true
 aws-c-mqtt-sys.workspace = true
 aws-c-s3-sys.workspace = true
 aws-c-sdkutils-sys.workspace = true
+futures.workspace = true
 log.workspace = true
+
+[build-dependencies]
+aws-c-builder.workspace = true
+cc.workspace = true

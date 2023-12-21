@@ -18,7 +18,7 @@ impl Subject {
                 match $self:ident {
                     $(
                         $package_id:ident as $package:literal {
-                            $($value:ident => $override:literal,)+
+                            $($value:ident => $override:literal,)*
                         }
                     )+
                 }
@@ -28,7 +28,7 @@ impl Subject {
                         PackageId::$package_id => match $self.0 {
                             $(
                                 $value => Some(concat!("aws::", $package, "::", $override)),
-                            )+
+                            )*
                             _ => Some(concat!("aws::", $package)),
                         },
                     )+
@@ -78,6 +78,7 @@ impl Subject {
                     AWS_LS_HTTP_WEBSOCKET_SETUP => "websocket_setup",
                     AWS_LS_HTTP_PROXY_NEGOTIATION => "proxy_negotiation",
                 }
+                COMPRESSION as "compression" {}
                 EVENT_STREAM as "event_stream" {
                     AWS_LS_EVENT_STREAM_CHANNEL_HANDLER => "channel_handler",
                     AWS_LS_EVENT_STREAM_RPC_SERVER => "rpc_server",
