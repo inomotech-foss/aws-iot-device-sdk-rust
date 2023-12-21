@@ -1,6 +1,6 @@
 fn main() {
     aws_c_builder::Config::new("aws-c-common")
-        .bindgen_blanket_include_dirs(&["common"])
+        .bindgen_blanket_include_dirs(["common"])
         .bindgen_callback(|builder| {
             builder
                 .blocklist_item("aws_format_standard_log_line")
