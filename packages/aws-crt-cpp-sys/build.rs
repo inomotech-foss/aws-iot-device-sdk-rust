@@ -1,6 +1,6 @@
 fn main() {
     aws_c_builder::Config::new("aws-crt-cpp")
-        .aws_dependencies(&[
+        .aws_dependencies([
             "AWS_C_AUTH",
             "AWS_C_CAL",
             "AWS_C_COMMON",

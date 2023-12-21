@@ -1,6 +1,6 @@
 fn main() {
     aws_c_builder::Config::new("aws-c-auth")
-        .aws_dependencies(&["AWS_C_COMMON", "AWS_C_HTTP", "AWS_C_SDKUTILS"])
+        .aws_dependencies(["AWS_C_COMMON", "AWS_C_HTTP", "AWS_C_SDKUTILS"])
         .bindgen_callback(|builder| {
             builder
                 .allowlist_item("(?i)aws_(c_)?auth.*")
