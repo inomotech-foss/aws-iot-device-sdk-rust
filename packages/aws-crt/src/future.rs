@@ -19,14 +19,6 @@ pub(crate) fn create<T>() -> (CallbackFutureResolver<T>, CallbackFuture<T>) {
     )
 }
 
-pub(crate) fn try_start<T>(
-    start_fn: impl FnOnce(*mut c_void) -> c_int,
-) -> CallbackFuture<crate::Result<T>> {
-    let (resolver, fut) = create();
-    resolver.try_or_resolve(start_fn);
-    fut
-}
-
 pub(crate) struct CallbackFutureResolver<T> {
     inner: Arc<Inner<T>>,
 }
@@ -92,6 +84,11 @@ impl<T> Debug for CallbackFuture<T> {
             .finish()
     }
 }
+
+// the following types are copied from futures' oneshot implementation: <https://github.com/rust-lang/futures-rs/blob/b2f9298f31731260a09e9ad62a3df3456bc3004e/futures-channel/src/oneshot.rs#L36>
+// we can't use the oneshot implementation directly because it lacks the
+// into_raw / from_raw methods. Perhaps they might be willing to accept a PR for
+// this?
 
 struct Inner<T> {
     complete: AtomicBool,
