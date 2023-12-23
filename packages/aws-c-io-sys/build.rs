@@ -1,10 +1,20 @@
+use std::path::{Path, PathBuf};
+
 fn main() {
-    let mut aws_deps = vec!["AWS_C_CAL", "AWS_C_COMMON"];
+    let cmake_import_dir;
+    let mut config = aws_c_builder::Config::new("aws-c-io");
+
     if aws_c_builder::is_linux_like() {
-        aws_deps.push("S2N");
+        let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
+        cmake_import_dir = out_dir.join("_cmake_imports");
+        std::fs::create_dir_all(&cmake_import_dir).unwrap();
+
+        create_s2n_package_config(&cmake_import_dir);
+        config = config.extra_cmake_prefix_paths([cmake_import_dir.to_str().unwrap()]);
     }
-    aws_c_builder::Config::new("aws-c-io")
-        .aws_dependencies(aws_deps)
+
+    config
+        .aws_dependencies(["AWS_C_CAL", "AWS_C_COMMON"])
         .bindgen_callback(|builder| {
             builder
                 .allowlist_item("(?i)aws_async_input_stream.*")
@@ -30,4 +40,19 @@ fn main() {
                 .allowlist_type("aws.+host.+_fn")
         })
         .build();
+}
+
+fn create_s2n_package_config(target_dir: &Path) {
+    use std::fmt::Write;
+
+    let s2n_include = std::env::var("DEP_S2N_TLS_INCLUDE").unwrap();
+
+    let mut content = String::new();
+    writeln!(&mut content, "add_library(AWS::s2n STATIC IMPORTED)").unwrap();
+    writeln!(
+        &mut content,
+        "target_include_directories(AWS::s2n INTERFACE \"{s2n_include}\")"
+    )
+    .unwrap();
+    std::fs::write(target_dir.join("s2n-config.cmake"), content).unwrap();
 }
