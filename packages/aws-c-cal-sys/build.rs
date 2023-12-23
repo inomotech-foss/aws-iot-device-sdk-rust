@@ -15,5 +15,5 @@ fn main() {
                 .allowlist_item("(?i)aws_rsa.*")
                 .allowlist_item("(?i)aws_symmetric.*")
         })
-        .build()
+        .build();
 }

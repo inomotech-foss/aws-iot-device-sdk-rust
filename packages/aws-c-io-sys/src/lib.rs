@@ -9,6 +9,7 @@ extern crate aws_c_common_sys;
 mod bindings {
     #![allow(
         clippy::all,
+        clippy::wildcard_imports,
         non_camel_case_types,
         non_snake_case,
         non_upper_case_globals,

@@ -6,5 +6,5 @@ fn main() {
                 .allowlist_item("(?i)aws_(c_)?compression.*")
                 .allowlist_item("(?i)aws_huffman.*")
         })
-        .build()
+        .build();
 }

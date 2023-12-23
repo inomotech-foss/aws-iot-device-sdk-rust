@@ -12,5 +12,5 @@ fn main() {
             "AWS_CHECKSUMS",
         ])
         .run_bindgen(false)
-        .build()
+        .build();
 }

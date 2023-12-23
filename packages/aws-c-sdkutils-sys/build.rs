@@ -9,5 +9,5 @@ fn main() {
                 .allowlist_item("(?i)aws_resource_name.*")
                 .allowlist_item("(?i)aws_(c_)?sdkutils.*")
         })
-        .build()
+        .build();
 }

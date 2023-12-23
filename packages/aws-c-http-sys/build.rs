@@ -8,5 +8,5 @@ fn main() {
                 .allowlist_item("(?i)aws_websocket.*")
                 .allowlist_type("proxy_env_var_settings")
         })
-        .build()
+        .build();
 }

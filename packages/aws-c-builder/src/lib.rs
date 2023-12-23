@@ -2,16 +2,17 @@
 
 use std::path::PathBuf;
 
-type CmakeCallbackFn = Box<dyn FnOnce(&cmake::Config)>;
+type CmakeCallbackFn<'a> = Box<dyn FnOnce(&mut cmake::Config) + 'a>;
+type BindgenCallbackFn<'a> = Box<dyn FnOnce(bindgen::Builder) -> bindgen::Builder + 'a>;
 
 pub struct Config<'a> {
     lib_name: &'a str,
     aws_dependencies: Vec<&'a str>,
     link_libraries: Vec<&'a str>,
     bindgen_blanket_include_dirs: Vec<&'a str>,
-    cmake_callback: Option<CmakeCallbackFn>,
+    cmake_callback: Option<CmakeCallbackFn<'a>>,
     run_bindgen: bool,
-    bindgen_callback: Option<Box<dyn FnOnce(bindgen::Builder) -> bindgen::Builder>>,
+    bindgen_callback: Option<BindgenCallbackFn<'a>>,
 }
 
 impl<'a> Config<'a> {
@@ -29,12 +30,12 @@ impl<'a> Config<'a> {
     }
 
     pub fn aws_dependencies(mut self, deps: impl IntoIterator<Item = &'a str>) -> Self {
-        self.aws_dependencies = deps.into_iter().collect();
+        self.aws_dependencies.extend(deps);
         self
     }
 
     pub fn link_libraries(mut self, libs: impl IntoIterator<Item = &'a str>) -> Self {
-        self.link_libraries = libs.into_iter().collect();
+        self.link_libraries.extend(libs);
         self
     }
 
@@ -42,11 +43,11 @@ impl<'a> Config<'a> {
         mut self,
         names: impl IntoIterator<Item = &'a str>,
     ) -> Self {
-        self.bindgen_blanket_include_dirs = names.into_iter().collect();
+        self.bindgen_blanket_include_dirs.extend(names);
         self
     }
 
-    pub fn cmake_callback(mut self, callback: impl FnOnce(&cmake::Config) + 'static) -> Self {
+    pub fn cmake_callback(mut self, callback: impl FnOnce(&mut cmake::Config) + 'a) -> Self {
         self.cmake_callback = Some(Box::new(callback));
         self
     }
@@ -58,7 +59,7 @@ impl<'a> Config<'a> {
 
     pub fn bindgen_callback(
         mut self,
-        callback: impl FnOnce(bindgen::Builder) -> bindgen::Builder + 'static,
+        callback: impl FnOnce(bindgen::Builder) -> bindgen::Builder + 'a,
     ) -> Self {
         self.bindgen_callback = Some(Box::new(callback));
         self
@@ -84,7 +85,7 @@ impl<'a> Config<'a> {
             .define("BUILD_TESTING", "OFF");
 
         if let Some(cb) = self.cmake_callback.take() {
-            cb(&config);
+            cb(&mut config);
         }
 
         let out_dir = config.build().to_str().unwrap().to_owned();
@@ -163,6 +164,7 @@ fn get_build_variable(package: &str, var: &str) -> String {
     v
 }
 
+#[must_use]
 pub fn is_linux_like() -> bool {
     // anything unix that isn't macos is considered "Linux" by AWS
     std::env::var("CARGO_CFG_TARGET_FAMILY").unwrap() == "unix"

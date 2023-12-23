@@ -13,5 +13,5 @@ fn main() {
             "IotShadow-cpp",
         ])
         .run_bindgen(false)
-        .build()
+        .build();
 }

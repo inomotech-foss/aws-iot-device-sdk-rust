@@ -29,5 +29,5 @@ fn main() {
                 .allowlist_type("aws_standard_retry_options")
                 .allowlist_type("aws.+host.+_fn")
         })
-        .build()
+        .build();
 }

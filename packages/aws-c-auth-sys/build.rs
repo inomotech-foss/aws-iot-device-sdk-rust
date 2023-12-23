@@ -11,5 +11,5 @@ fn main() {
                 .allowlist_type("aws_should_sign_header_fn")
                 .allowlist_type("aws.+credentials.+_fn")
         })
-        .build()
+        .build();
 }

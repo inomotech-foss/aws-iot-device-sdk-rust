@@ -13,5 +13,5 @@ fn main() {
                 .allowlist_item("(?i)aws_(c_)?s3.*")
                 .allowlist_type("aws_credentials_properties_s3express")
         })
-        .build()
+        .build();
 }
