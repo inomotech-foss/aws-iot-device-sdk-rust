@@ -10,6 +10,7 @@ pub struct Config<'a> {
     aws_dependencies: Vec<&'a str>,
     link_libraries: Vec<&'a str>,
     bindgen_blanket_include_dirs: Vec<&'a str>,
+    extra_cmake_prefix_paths: Vec<&'a str>,
     cmake_callback: Option<CmakeCallbackFn<'a>>,
     run_bindgen: bool,
     bindgen_callback: Option<BindgenCallbackFn<'a>>,
@@ -17,12 +18,12 @@ pub struct Config<'a> {
 
 impl<'a> Config<'a> {
     pub fn new(lib_name: &'a str) -> Self {
-        let link_libraries = vec![lib_name];
         Self {
             lib_name,
             aws_dependencies: Vec::new(),
-            link_libraries,
+            link_libraries: Vec::new(),
             bindgen_blanket_include_dirs: Vec::new(),
+            extra_cmake_prefix_paths: Vec::new(),
             cmake_callback: None,
             run_bindgen: true,
             bindgen_callback: None,
@@ -47,6 +48,11 @@ impl<'a> Config<'a> {
         self
     }
 
+    pub fn extra_cmake_prefix_paths(mut self, paths: impl IntoIterator<Item = &'a str>) -> Self {
+        self.extra_cmake_prefix_paths.extend(paths);
+        self
+    }
+
     pub fn cmake_callback(mut self, callback: impl FnOnce(&mut cmake::Config) + 'a) -> Self {
         self.cmake_callback = Some(Box::new(callback));
         self
@@ -67,7 +73,12 @@ impl<'a> Config<'a> {
 
     pub fn build(mut self) {
         let dependency_root_paths = get_dependency_root_paths(self.aws_dependencies.clone());
-        let cmake_prefix_path = dependency_root_paths.join(";");
+        let cmake_prefix_path = dependency_root_paths
+            .iter()
+            .map(String::as_str)
+            .chain(self.extra_cmake_prefix_paths.iter().copied())
+            .collect::<Vec<_>>()
+            .join(";");
         println!("cargo:cmake_prefix_path={cmake_prefix_path}");
         let out_dir = self.compile(&cmake_prefix_path);
         if self.run_bindgen {
@@ -90,6 +101,9 @@ impl<'a> Config<'a> {
 
         let out_dir = config.build().to_str().unwrap().to_owned();
         println!("cargo:rustc-link-search=native={out_dir}/lib");
+        if self.link_libraries.is_empty() {
+            self.link_libraries.push(self.lib_name);
+        }
         for name in &self.link_libraries {
             println!("cargo:rustc-link-lib=static={name}");
         }
