@@ -14,8 +14,11 @@ pub struct ByteCursor<'a> {
 }
 
 impl<'a> ByteCursor<'a> {
+    /// # Safety
+    ///
+    /// The byte cursor lifetime must be valid for the lifetime of 'self'.
     #[inline]
-    pub const fn from_inner(inner: aws_byte_cursor) -> Self {
+    pub const unsafe fn from_inner(inner: aws_byte_cursor) -> Self {
         Self {
             inner,
             marker: PhantomData,
@@ -39,11 +42,14 @@ impl<'a> ByteCursor<'a> {
 
     #[inline]
     pub const fn from_slice(b: &'a [u8]) -> Self {
-        // not using 'aws_byte_cursor_from_array' so the function can be const
-        Self::from_inner(aws_byte_cursor {
-            len: b.len(),
-            ptr: b.as_ptr().cast_mut(),
-        })
+        // SAFETY: the lifetime of the slice applies to Self
+        unsafe {
+            // not using 'aws_byte_cursor_from_array' so the function can be const
+            Self::from_inner(aws_byte_cursor {
+                len: b.len(),
+                ptr: b.as_ptr().cast_mut(),
+            })
+        }
     }
 
     #[inline]

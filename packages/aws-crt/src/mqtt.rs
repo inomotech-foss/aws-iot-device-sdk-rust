@@ -2,11 +2,13 @@ use std::ffi::{c_int, c_void};
 
 use aws_c_common_sys::aws_byte_cursor;
 use aws_c_mqtt_sys::{
-    aws_mqtt_client_connection, aws_mqtt_client_connection_connect,
-    aws_mqtt_client_connection_disconnect, aws_mqtt_client_connection_publish,
+    aws_mqtt_client, aws_mqtt_client_acquire, aws_mqtt_client_connection,
+    aws_mqtt_client_connection_acquire, aws_mqtt_client_connection_connect,
+    aws_mqtt_client_connection_disconnect, aws_mqtt_client_connection_new,
+    aws_mqtt_client_connection_publish, aws_mqtt_client_connection_release,
     aws_mqtt_client_connection_set_login, aws_mqtt_client_connection_set_reconnect_timeout,
-    aws_mqtt_client_connection_set_will, aws_mqtt_client_connection_subscribe,
-    aws_mqtt_connection_options,
+    aws_mqtt_client_connection_set_will, aws_mqtt_client_connection_subscribe, aws_mqtt_client_new,
+    aws_mqtt_client_release, aws_mqtt_connection_options,
 };
 pub use aws_c_mqtt_sys::{
     aws_mqtt_qos, AWS_MQTT_QOS_AT_LEAST_ONCE, AWS_MQTT_QOS_AT_MOST_ONCE, AWS_MQTT_QOS_EXACTLY_ONCE,
@@ -15,20 +17,53 @@ pub use aws_c_mqtt_sys::{
 pub use self::futures::{PacketFuture, TaskFuture};
 use self::subscribe::PublishCallback;
 pub use self::subscribe::SubscribeAck;
-use crate::{ByteCursor, Error, Result};
+use crate::io::ClientBootstrap;
+use crate::{AllocatorRef, ByteCursor, Error, Result};
 
 mod futures;
 mod subscribe;
 
-pub struct Connection {}
+ref_counted_wrapper!(struct ClientInner(aws_mqtt_client) {
+    acquire: aws_mqtt_client_acquire,
+    release: aws_mqtt_client_release,
+});
+
+#[derive(Clone)]
+pub struct Client(ClientInner);
+
+impl Client {
+    pub fn new(allocator: AllocatorRef, bootstrap: &ClientBootstrap) -> Result<Self> {
+        unsafe {
+            ClientInner::new_or_error(aws_mqtt_client_new(allocator.as_ptr(), bootstrap.as_ptr()))
+        }
+        .map(Self)
+    }
+
+    pub const fn as_ptr(&self) -> *mut aws_mqtt_client {
+        self.0.as_ptr()
+    }
+}
+
+ref_counted_wrapper!(struct ConnectionInner(aws_mqtt_client_connection) {
+    acquire: aws_mqtt_client_connection_acquire,
+    release: aws_mqtt_client_connection_release,
+});
+
+#[derive(Clone)]
+pub struct Connection(ConnectionInner);
 
 impl Connection {
-    pub fn as_mut_ptr(&mut self) -> *mut aws_mqtt_client_connection {
-        todo!()
+    fn new(client: &Client) -> Result<Self> {
+        unsafe { ConnectionInner::new_or_error(aws_mqtt_client_connection_new(client.as_ptr())) }
+            .map(Self)
+    }
+
+    pub const fn as_ptr(&self) -> *mut aws_mqtt_client_connection {
+        self.0.as_ptr()
     }
 
     pub fn set_will(
-        &mut self,
+        &self,
         topic: &str,
         qos: aws_mqtt_qos,
         retain: bool,
@@ -38,7 +73,7 @@ impl Connection {
         let payload = ByteCursor::from_slice(payload);
         Error::check_rc(unsafe {
             aws_mqtt_client_connection_set_will(
-                self.as_mut_ptr(),
+                self.as_ptr(),
                 topic.as_ptr(),
                 qos,
                 retain,
@@ -47,22 +82,22 @@ impl Connection {
         })
     }
 
-    pub fn set_login(&mut self, username: &str, password: &str) -> Result<()> {
+    pub fn set_login(&self, username: &str, password: &str) -> Result<()> {
         let username = ByteCursor::from_str(username);
         let password = ByteCursor::from_str(password);
         Error::check_rc(unsafe {
             aws_mqtt_client_connection_set_login(
-                self.as_mut_ptr(),
+                self.as_ptr(),
                 username.as_ptr(),
                 password.as_ptr(),
             )
         })
     }
 
-    pub fn set_reconnect_timeout(&mut self, min_seconds: u64, max_seconds: u64) -> Result<()> {
+    pub fn set_reconnect_timeout(&self, min_seconds: u64, max_seconds: u64) -> Result<()> {
         Error::check_rc(unsafe {
             aws_mqtt_client_connection_set_reconnect_timeout(
-                self.as_mut_ptr(),
+                self.as_ptr(),
                 min_seconds,
                 max_seconds,
             )
@@ -70,7 +105,7 @@ impl Connection {
     }
 
     pub fn connect(
-        &mut self,
+        &self,
         client_id: &str,
         clean_session: bool,
         keep_alive_time_secs: u16,
@@ -90,10 +125,10 @@ impl Connection {
             user_data: todo!(),
             clean_session,
         };
-        Error::check_rc(unsafe { aws_mqtt_client_connection_connect(self.as_mut_ptr(), &options) })
+        Error::check_rc(unsafe { aws_mqtt_client_connection_connect(self.as_ptr(), &options) })
     }
 
-    pub fn disconnect(&mut self) -> TaskFuture {
+    pub fn disconnect(&self) -> TaskFuture {
         unsafe extern "C" fn on_disconnect(
             _connection: *mut aws_mqtt_client_connection,
             userdata: *mut c_void,
@@ -104,7 +139,7 @@ impl Connection {
         let (resolver, fut) = crate::future::create();
         let res = Error::check_rc(unsafe {
             aws_mqtt_client_connection_disconnect(
-                self.as_mut_ptr(),
+                self.as_ptr(),
                 Some(on_disconnect),
                 resolver.into_raw(),
             )
@@ -113,7 +148,7 @@ impl Connection {
     }
 
     pub fn publish(
-        &mut self,
+        &self,
         topic: &str,
         qos: aws_mqtt_qos,
         retain: bool,
@@ -133,7 +168,7 @@ impl Connection {
         let (resolver, fut) = crate::future::create();
         let packet_id = unsafe {
             aws_mqtt_client_connection_publish(
-                self.as_mut_ptr(),
+                self.as_ptr(),
                 topic.as_ptr(),
                 qos,
                 retain,
@@ -146,7 +181,7 @@ impl Connection {
     }
 
     fn subscribe_impl(
-        &mut self,
+        &self,
         topic_filter: &str,
         qos: aws_mqtt_qos,
         publish_callback: PublishCallback,
@@ -167,7 +202,7 @@ impl Connection {
         let (resolver, fut) = crate::future::create();
         let packet_id = unsafe {
             aws_mqtt_client_connection_subscribe(
-                self.as_mut_ptr(),
+                self.as_ptr(),
                 topic_filter.as_ptr(),
                 qos,
                 publish_callback.on_publish,
