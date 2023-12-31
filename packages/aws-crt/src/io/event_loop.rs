@@ -1,6 +1,6 @@
 use aws_c_io_sys::{
-    aws_event_loop_group, aws_event_loop_group_acquire, aws_event_loop_group_new_default,
-    aws_event_loop_group_release,
+    aws_event_loop_group, aws_event_loop_group_acquire, aws_event_loop_group_get_loop_count,
+    aws_event_loop_group_new_default, aws_event_loop_group_release,
 };
 
 use crate::{AllocatorRef, Result};
@@ -19,7 +19,7 @@ impl EventLoopGroup {
             Inner::new_or_error(aws_event_loop_group_new_default(
                 allocator.as_ptr(),
                 max_threads,
-                std::ptr::null_mut(),
+                core::ptr::null_mut(),
             ))
         }
         .map(Self)
@@ -27,5 +27,14 @@ impl EventLoopGroup {
 
     pub const fn as_ptr(&self) -> *mut aws_event_loop_group {
         self.0.as_ptr()
+    }
+
+    pub async fn shutdown(self) {
+        drop(self); // release my handle
+        todo!()
+    }
+
+    pub fn get_loop_count(&self) -> usize {
+        unsafe { aws_event_loop_group_get_loop_count(self.as_ptr()) }
     }
 }

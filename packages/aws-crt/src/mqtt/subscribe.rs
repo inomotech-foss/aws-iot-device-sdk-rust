@@ -1,4 +1,5 @@
-use std::ffi::c_void;
+use alloc::boxed::Box;
+use core::ffi::c_void;
 
 use aws_c_common_sys::aws_byte_cursor;
 use aws_c_mqtt_sys::{
@@ -67,7 +68,7 @@ impl FnPublishCallback {
             let msg = MessageRef {
                 // SAFETY: mqtt topics are always UTF-8 encoded
                 // TODO: verify that the mqtt library actually checks this!
-                topic: std::str::from_utf8_unchecked(topic.as_bytes()),
+                topic: core::str::from_utf8_unchecked(topic.as_bytes()),
                 payload: payload.as_bytes(),
                 dup,
                 qos,

@@ -1,7 +1,8 @@
-use std::borrow::Cow;
-use std::ffi::CStr;
-use std::mem::MaybeUninit;
-use std::ops::RangeInclusive;
+use alloc::borrow::Cow;
+use alloc::string::String;
+use core::ffi::CStr;
+use core::mem::MaybeUninit;
+use core::ops::RangeInclusive;
 
 use aws_c_auth_sys::AWS_C_AUTH_PACKAGE_ID;
 use aws_c_cal_sys::AWS_C_CAL_PACKAGE_ID;
@@ -49,7 +50,7 @@ impl Subject {
     }
 
     fn dynamic_target(self) -> String {
-        format!("aws::{}", self.subject_name().to_bytes().escape_ascii())
+        alloc::format!("aws::{}", self.subject_name().to_bytes().escape_ascii())
     }
 
     pub fn target(self) -> Cow<'static, str> {

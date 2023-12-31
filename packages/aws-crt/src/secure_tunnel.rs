@@ -1,11 +1,13 @@
-use std::ffi::CStr;
-use std::marker::PhantomData;
+use alloc::boxed::Box;
+use core::ffi::{c_void, CStr};
+use core::marker::PhantomData;
 
 use aws_c_iot_sys::{
     aws_secure_tunnel, aws_secure_tunnel_acquire, aws_secure_tunnel_connection_start,
     aws_secure_tunnel_message_view, aws_secure_tunnel_new, aws_secure_tunnel_options,
     aws_secure_tunnel_release, aws_secure_tunnel_send_message, aws_secure_tunnel_start,
-    aws_secure_tunnel_stop, aws_secure_tunnel_stream_start, AWS_SECURE_TUNNELING_DESTINATION_MODE,
+    aws_secure_tunnel_stop, aws_secure_tunnel_stream_start,
+    aws_secure_tunneling_on_termination_complete_fn, AWS_SECURE_TUNNELING_DESTINATION_MODE,
     AWS_SECURE_TUNNELING_SOURCE_MODE,
 };
 
@@ -20,7 +22,7 @@ ref_counted_wrapper!(struct Inner(aws_secure_tunnel) {
 pub struct Tunnel(Inner);
 
 impl Tunnel {
-    pub fn builder() -> Builder<'static> {
+    pub const fn builder() -> Builder<'static> {
         Builder::new()
     }
 
@@ -73,10 +75,33 @@ pub struct Builder<'a> {
 }
 
 impl Builder<'static> {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             allocator: None,
-            options: unsafe { std::mem::zeroed() },
+            options: aws_secure_tunnel_options {
+                endpoint_host: ByteCursor::empty().into_inner(),
+                bootstrap: core::ptr::null_mut(),
+                socket_options: core::ptr::null_mut(),
+                tls_options: core::ptr::null_mut(),
+                http_proxy_options: core::ptr::null(),
+                access_token: ByteCursor::empty().into_inner(),
+                client_token: ByteCursor::empty().into_inner(),
+                root_ca: core::ptr::null(),
+                on_message_received: None,
+                user_data: core::ptr::null_mut(),
+                local_proxy_mode: 0,
+                on_connection_complete: None,
+                on_connection_shutdown: None,
+                on_send_message_complete: None,
+                on_stream_start: None,
+                on_stream_reset: None,
+                on_connection_start: None,
+                on_connection_reset: None,
+                on_session_reset: None,
+                on_stopped: None,
+                on_termination_complete: None,
+                secure_tunnel_on_termination_user_data: core::ptr::null_mut(),
+            },
             marker: PhantomData,
         }
     }
@@ -134,5 +159,34 @@ impl<'a> Builder<'a> {
     pub fn root_ca(&mut self, value: &'a CStr) -> &mut Self {
         self.options.root_ca = value.as_ptr();
         self
+    }
+}
+
+enum Message {
+    ConnectionComplete { error: Error }, // todo: connection_view
+    ConnectionShutdown { error: Error },
+    StreamStart { error: Error },
+}
+
+struct UserData {
+    on_message_received: Box<dyn Fn(&aws_secure_tunnel_message_view)>,
+}
+
+impl UserData {
+    fn apply(self: Box<Self>, options: &mut aws_secure_tunnel_options) {
+        let (on_termination_complete, user_data) = self.into_ffi();
+        options.on_termination_complete = on_termination_complete;
+        options.user_data = user_data;
+        options.secure_tunnel_on_termination_user_data = user_data;
+    }
+
+    fn into_ffi(self: Box<Self>) -> (aws_secure_tunneling_on_termination_complete_fn, *mut c_void) {
+        extern "C" fn on_termination_complete(user_data: *mut c_void) {
+            let user_data = unsafe { Box::from_raw(user_data.cast::<UserData>()) };
+            drop(user_data)
+        }
+
+        let user_data = Box::into_raw(self);
+        (Some(on_termination_complete), user_data.cast())
     }
 }

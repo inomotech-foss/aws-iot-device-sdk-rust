@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use core::marker::PhantomData;
 
 use aws_c_io_sys::{
     aws_client_bootstrap, aws_client_bootstrap_acquire, aws_client_bootstrap_new,
@@ -41,6 +41,11 @@ impl ClientBootstrap {
     pub const fn as_ptr(&self) -> *mut aws_client_bootstrap {
         self.0.as_ptr()
     }
+
+    pub async fn shutdown(self) {
+        drop(self); // release my handle
+        todo!()
+    }
 }
 
 pub struct ClientBootstrapBuilder<'a> {
@@ -56,9 +61,9 @@ impl<'a> ClientBootstrapBuilder<'a> {
             options: aws_client_bootstrap_options {
                 event_loop_group: el_group.as_ptr(),
                 host_resolver: host_resolver.as_ptr(),
-                host_resolution_config: std::ptr::null(),
+                host_resolution_config: core::ptr::null(),
                 on_shutdown_complete: None,
-                user_data: std::ptr::null_mut(),
+                user_data: core::ptr::null_mut(),
             },
             marker: PhantomData,
         }

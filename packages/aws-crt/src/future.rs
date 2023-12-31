@@ -1,13 +1,13 @@
-use std::cell::UnsafeCell;
-use std::ffi::{c_int, c_void};
-use std::fmt::Debug;
-use std::future::Future;
-use std::ops::{Deref, DerefMut};
-use std::pin::Pin;
-use std::sync::atomic::AtomicBool;
-use std::sync::atomic::Ordering::SeqCst;
-use std::sync::Arc;
-use std::task::{Poll, Waker};
+use alloc::sync::Arc;
+use core::cell::UnsafeCell;
+use core::ffi::{c_int, c_void};
+use core::fmt::Debug;
+use core::future::Future;
+use core::ops::{Deref, DerefMut};
+use core::pin::Pin;
+use core::sync::atomic::AtomicBool;
+use core::sync::atomic::Ordering::SeqCst;
+use core::task::{Poll, Waker};
 
 pub(crate) fn create<T>() -> (CallbackFutureResolver<T>, CallbackFuture<T>) {
     let inner = Arc::new(Inner::new());
@@ -66,7 +66,7 @@ impl<T> Unpin for CallbackFuture<T> {}
 impl<T> Future for CallbackFuture<T> {
     type Output = T;
 
-    fn poll(self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> Poll<T> {
+    fn poll(self: Pin<&mut Self>, cx: &mut core::task::Context<'_>) -> Poll<T> {
         self.inner.recv(cx)
     }
 }
@@ -78,7 +78,7 @@ impl<T> Drop for CallbackFuture<T> {
 }
 
 impl<T> Debug for CallbackFuture<T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("CallbackFuture")
             .field("complete", &self.inner.complete)
             .finish()
@@ -155,7 +155,7 @@ impl<T> Inner<T> {
         None
     }
 
-    fn recv(&self, cx: &mut std::task::Context<'_>) -> Poll<T> {
+    fn recv(&self, cx: &mut core::task::Context<'_>) -> Poll<T> {
         // Check to see if some data has arrived. If it hasn't then we need to
         // block our task.
         //
@@ -214,7 +214,7 @@ impl<T> Inner<T> {
     }
 }
 
-/// A "mutex" around a value, similar to `std::sync::Mutex<T>`.
+/// A "mutex" around a value, similar to `core::sync::Mutex<T>`.
 ///
 /// This lock only supports the `try_lock` operation, however, and does not
 /// implement poisoning.

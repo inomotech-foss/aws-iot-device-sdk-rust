@@ -1,7 +1,7 @@
-use std::ffi::{c_int, c_void};
-use std::future::Future;
-use std::pin::Pin;
-use std::task::Poll;
+use core::ffi::{c_int, c_void};
+use core::future::Future;
+use core::pin::Pin;
+use core::task::Poll;
 
 use futures::FutureExt;
 
@@ -36,7 +36,7 @@ impl TaskFuture {
 impl Future for TaskFuture {
     type Output = Result<()>;
 
-    fn poll(self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> Poll<Self::Output> {
+    fn poll(self: Pin<&mut Self>, cx: &mut core::task::Context<'_>) -> Poll<Self::Output> {
         let this = self.get_mut();
         this.state.poll_unpin(cx)
     }
@@ -83,7 +83,7 @@ impl PacketFuture<()> {
 impl<T> Future for PacketFuture<T> {
     type Output = Result<T>;
 
-    fn poll(self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> Poll<Self::Output> {
+    fn poll(self: Pin<&mut Self>, cx: &mut core::task::Context<'_>) -> Poll<Self::Output> {
         let this = self.get_mut();
         this.state.poll_unpin(cx)
     }
@@ -108,7 +108,7 @@ impl<T> State<T> {
 impl<T> Future for State<T> {
     type Output = Result<T>;
 
-    fn poll(self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> Poll<Self::Output> {
+    fn poll(self: Pin<&mut Self>, cx: &mut core::task::Context<'_>) -> Poll<Self::Output> {
         let this = self.get_mut();
         match this {
             Self::Error(err) => Poll::Ready(Err(*err)),

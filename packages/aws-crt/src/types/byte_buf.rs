@@ -1,6 +1,6 @@
-use std::fmt::Debug;
-use std::marker::PhantomData;
-use std::mem::MaybeUninit;
+use core::fmt::Debug;
+use core::marker::PhantomData;
+use core::mem::MaybeUninit;
 
 use aws_c_common_sys::{aws_byte_buf, aws_byte_buf_clean_up, aws_byte_buf_init, aws_byte_cursor};
 
@@ -22,6 +22,16 @@ impl<'a> ByteCursor<'a> {
         Self {
             inner,
             marker: PhantomData,
+        }
+    }
+
+    #[inline]
+    pub const fn empty() -> Self {
+        unsafe {
+            Self::from_inner(aws_byte_cursor {
+                len: 0,
+                ptr: core::ptr::null_mut(),
+            })
         }
     }
 
@@ -59,12 +69,12 @@ impl<'a> ByteCursor<'a> {
 
     #[inline]
     pub const fn as_bytes(&self) -> &[u8] {
-        unsafe { std::slice::from_raw_parts(self.inner.ptr, self.inner.len) }
+        unsafe { core::slice::from_raw_parts(self.inner.ptr, self.inner.len) }
     }
 }
 
 impl<'a> Debug for ByteCursor<'a> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_tuple("ByteCursor").field(&self.as_bytes()).finish()
     }
 }
@@ -87,7 +97,7 @@ impl ByteBuf {
 
     #[inline]
     pub const fn as_bytes(&self) -> &[u8] {
-        unsafe { std::slice::from_raw_parts(self.0.buffer, self.0.len) }
+        unsafe { core::slice::from_raw_parts(self.0.buffer, self.0.len) }
     }
 
     #[inline]

@@ -1,4 +1,4 @@
-use std::ffi::{c_char, c_int, c_void};
+use core::ffi::{c_char, c_int, c_void};
 
 use aws_c_common_sys::{
     aws_log_level, aws_log_subject_t, aws_logger, aws_logger_vtable, AWS_LL_DEBUG, AWS_LL_ERROR,
@@ -13,7 +13,7 @@ pub fn create_logger(allocator: AllocatorRef) -> aws_logger {
     aws_logger {
         vtable: (&VTABLE as *const aws_logger_vtable).cast_mut(),
         allocator: allocator.as_ptr(),
-        p_impl: std::ptr::null_mut(),
+        p_impl: core::ptr::null_mut(),
     }
 }
 

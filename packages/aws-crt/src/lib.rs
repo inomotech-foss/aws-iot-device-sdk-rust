@@ -1,3 +1,7 @@
+// #![no_std]
+
+extern crate alloc;
+
 pub use self::allocator::{Allocator, AllocatorRef};
 pub use self::api::ApiHandle;
 pub use self::error::{Error, Result};

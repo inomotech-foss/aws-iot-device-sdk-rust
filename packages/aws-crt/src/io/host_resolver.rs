@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use core::marker::PhantomData;
 
 use aws_c_io_sys::{
     aws_host_resolver, aws_host_resolver_acquire, aws_host_resolver_default_options,
@@ -32,6 +32,11 @@ impl HostResolver {
     pub const fn as_ptr(&self) -> *mut aws_host_resolver {
         self.0.as_ptr()
     }
+
+    pub async fn shutdown(self) {
+        drop(self); // release my handle
+        todo!()
+    }
 }
 
 pub struct HostResolverBuilder<'a> {
@@ -47,7 +52,7 @@ impl<'a> HostResolverBuilder<'a> {
             options: aws_host_resolver_default_options {
                 max_entries: 0,
                 el_group: el_group.as_ptr(),
-                shutdown_options: std::ptr::null(),
+                shutdown_options: core::ptr::null(),
                 system_clock_override_fn: None,
             },
             marker: PhantomData,

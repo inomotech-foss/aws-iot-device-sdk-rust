@@ -1,4 +1,4 @@
-use std::ffi::{c_int, c_void};
+use core::ffi::{c_int, c_void};
 
 use aws_c_common_sys::aws_byte_cursor;
 use aws_c_mqtt_sys::{

@@ -1,12 +1,12 @@
-use std::ffi::{c_int, CStr};
-use std::fmt::{Debug, Display};
+use core::ffi::{c_int, CStr};
+use core::fmt::{Debug, Display};
 
 use aws_c_common_sys::{
     aws_common_error, aws_error_lib_name, aws_error_name, aws_error_str, aws_last_error,
-    aws_reset_error, AWS_ERROR_SUCCESS, AWS_ERROR_UNKNOWN,
+    aws_reset_error, AWS_ERROR_OVERFLOW_DETECTED, AWS_ERROR_SUCCESS, AWS_ERROR_UNKNOWN,
 };
 
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<T> = core::result::Result<T, Error>;
 
 #[must_use]
 #[derive(Clone, Copy)]
@@ -14,12 +14,13 @@ pub struct Error(c_int);
 
 impl Error {
     pub const UNKNOWN: Self = Self(AWS_ERROR_UNKNOWN as _);
+    pub const OVERFLOW_DETECTED: Self = Self(AWS_ERROR_OVERFLOW_DETECTED as _);
 
     #[inline]
     pub fn last_in_current_thread() -> Self {
         let err = Self(unsafe { aws_last_error() });
         if err.is_success() {
-            // we have an error status but apparently not from aws
+            // we expect an error status but apparently not from aws
             Self::UNKNOWN
         } else {
             err
@@ -61,7 +62,7 @@ impl Error {
 }
 
 impl Debug for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("Error")
             .field("lib_name", &self.lib_name())
             .field("message", &self.message())
@@ -70,7 +71,7 @@ impl Debug for Error {
 }
 
 impl Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{}", self.message().to_bytes().escape_ascii())
     }
 }
