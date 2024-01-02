@@ -13,6 +13,8 @@ use aws_c_iot_sys::{
 
 use crate::{Allocator, AllocatorRef, ByteCursor, Error, Result};
 
+mod callbacks;
+
 ref_counted_wrapper!(struct Inner(aws_secure_tunnel) {
     acquire: aws_secure_tunnel_acquire,
     release: aws_secure_tunnel_release,
@@ -159,34 +161,5 @@ impl<'a> Builder<'a> {
     pub fn root_ca(&mut self, value: &'a CStr) -> &mut Self {
         self.options.root_ca = value.as_ptr();
         self
-    }
-}
-
-enum Message {
-    ConnectionComplete { error: Error }, // todo: connection_view
-    ConnectionShutdown { error: Error },
-    StreamStart { error: Error },
-}
-
-struct UserData {
-    on_message_received: Box<dyn Fn(&aws_secure_tunnel_message_view)>,
-}
-
-impl UserData {
-    fn apply(self: Box<Self>, options: &mut aws_secure_tunnel_options) {
-        let (on_termination_complete, user_data) = self.into_ffi();
-        options.on_termination_complete = on_termination_complete;
-        options.user_data = user_data;
-        options.secure_tunnel_on_termination_user_data = user_data;
-    }
-
-    fn into_ffi(self: Box<Self>) -> (aws_secure_tunneling_on_termination_complete_fn, *mut c_void) {
-        extern "C" fn on_termination_complete(user_data: *mut c_void) {
-            let user_data = unsafe { Box::from_raw(user_data.cast::<UserData>()) };
-            drop(user_data)
-        }
-
-        let user_data = Box::into_raw(self);
-        (Some(on_termination_complete), user_data.cast())
     }
 }

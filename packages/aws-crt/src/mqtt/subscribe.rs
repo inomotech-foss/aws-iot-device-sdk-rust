@@ -3,22 +3,23 @@ use core::ffi::c_void;
 
 use aws_c_common_sys::aws_byte_cursor;
 use aws_c_mqtt_sys::{
-    aws_mqtt_client_connection, aws_mqtt_client_publish_received_fn, aws_mqtt_userdata_cleanup_fn,
+    aws_mqtt_client_connection, aws_mqtt_client_publish_received_fn, aws_mqtt_qos,
+    aws_mqtt_userdata_cleanup_fn,
 };
 
-use super::aws_mqtt_qos;
+use super::Qos;
 use crate::ByteCursor;
 
 pub struct MessageRef<'a> {
     pub topic: &'a str,
     pub payload: &'a [u8],
     pub dup: bool,
-    pub qos: aws_mqtt_qos,
+    pub qos: Qos,
     pub retain: bool,
 }
 
 pub struct SubscribeAck {
-    pub granted_qos: aws_mqtt_qos,
+    pub granted_qos: Qos,
 }
 
 pub(crate) struct PublishCallback {
@@ -71,7 +72,7 @@ impl FnPublishCallback {
                 topic: core::str::from_utf8_unchecked(topic.as_bytes()),
                 payload: payload.as_bytes(),
                 dup,
-                qos,
+                qos: Qos(qos),
                 retain,
             };
             (userdata.on_message)(msg);

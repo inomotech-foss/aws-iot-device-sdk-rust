@@ -169,33 +169,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "aws-crt-cpp-sys"
-version = "0.1.0+v0.25.0"
-dependencies = [
- "aws-c-auth-sys",
- "aws-c-builder",
- "aws-c-cal-sys",
- "aws-c-common-sys",
- "aws-c-compression-sys",
- "aws-c-event-stream-sys",
- "aws-c-http-sys",
- "aws-c-io-sys",
- "aws-c-mqtt-sys",
- "aws-c-s3-sys",
- "aws-c-sdkutils-sys",
- "aws-checksums-sys",
-]
-
-[[package]]
-name = "aws-iot-device-sdk-cpp-sys"
-version = "0.1.0+v1.31.0"
-dependencies = [
- "aws-c-builder",
- "aws-c-iot-sys",
- "aws-crt-cpp-sys",
-]
-
-[[package]]
 name = "aws-lc-sys"
 version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"

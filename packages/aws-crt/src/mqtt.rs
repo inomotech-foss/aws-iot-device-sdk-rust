@@ -8,10 +8,8 @@ use aws_c_mqtt_sys::{
     aws_mqtt_client_connection_publish, aws_mqtt_client_connection_release,
     aws_mqtt_client_connection_set_login, aws_mqtt_client_connection_set_reconnect_timeout,
     aws_mqtt_client_connection_set_will, aws_mqtt_client_connection_subscribe, aws_mqtt_client_new,
-    aws_mqtt_client_release, aws_mqtt_connection_options,
-};
-pub use aws_c_mqtt_sys::{
-    aws_mqtt_qos, AWS_MQTT_QOS_AT_LEAST_ONCE, AWS_MQTT_QOS_AT_MOST_ONCE, AWS_MQTT_QOS_EXACTLY_ONCE,
+    aws_mqtt_client_release, aws_mqtt_connection_options, aws_mqtt_qos, AWS_MQTT_QOS_AT_LEAST_ONCE,
+    AWS_MQTT_QOS_AT_MOST_ONCE, AWS_MQTT_QOS_EXACTLY_ONCE,
 };
 
 pub use self::futures::{PacketFuture, TaskFuture};
@@ -62,20 +60,14 @@ impl Connection {
         self.0.as_ptr()
     }
 
-    pub fn set_will(
-        &self,
-        topic: &str,
-        qos: aws_mqtt_qos,
-        retain: bool,
-        payload: &[u8],
-    ) -> Result<()> {
+    pub fn set_will(&self, topic: &str, qos: Qos, retain: bool, payload: &[u8]) -> Result<()> {
         let topic = ByteCursor::from_str(topic);
         let payload = ByteCursor::from_slice(payload);
         Error::check_rc(unsafe {
             aws_mqtt_client_connection_set_will(
                 self.as_ptr(),
                 topic.as_ptr(),
-                qos,
+                qos.0,
                 retain,
                 payload.as_ptr(),
             )
@@ -147,13 +139,7 @@ impl Connection {
         TaskFuture::create(res, fut)
     }
 
-    pub fn publish(
-        &self,
-        topic: &str,
-        qos: aws_mqtt_qos,
-        retain: bool,
-        payload: &[u8],
-    ) -> PacketFuture<()> {
+    pub fn publish(&self, topic: &str, qos: Qos, retain: bool, payload: &[u8]) -> PacketFuture<()> {
         unsafe extern "C" fn on_complete(
             _connection: *mut aws_mqtt_client_connection,
             _packet_id: u16,
@@ -170,7 +156,7 @@ impl Connection {
             aws_mqtt_client_connection_publish(
                 self.as_ptr(),
                 topic.as_ptr(),
-                qos,
+                qos.0,
                 retain,
                 payload.as_ptr(),
                 Some(on_complete),
@@ -183,7 +169,7 @@ impl Connection {
     fn subscribe_impl(
         &self,
         topic_filter: &str,
-        qos: aws_mqtt_qos,
+        qos: Qos,
         publish_callback: PublishCallback,
     ) -> PacketFuture<SubscribeAck> {
         unsafe extern "C" fn on_suback(
@@ -194,7 +180,9 @@ impl Connection {
             error_code: c_int,
             userdata: *mut c_void,
         ) {
-            let res = Error::check_rc(error_code).map(|()| SubscribeAck { granted_qos: qos });
+            let res = Error::check_rc(error_code).map(|()| SubscribeAck {
+                granted_qos: Qos(qos),
+            });
             PacketFuture::<SubscribeAck>::resolve(userdata, res);
         }
 
@@ -204,7 +192,7 @@ impl Connection {
             aws_mqtt_client_connection_subscribe(
                 self.as_ptr(),
                 topic_filter.as_ptr(),
-                qos,
+                qos.0,
                 publish_callback.on_publish,
                 publish_callback.userdata,
                 publish_callback.cleanup_userdata,
@@ -219,4 +207,13 @@ impl Connection {
         }
         PacketFuture::create(packet_id, fut)
     }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Qos(pub(crate) aws_mqtt_qos);
+
+impl Qos {
+    pub const AT_LEAST_ONCE: Self = Self(AWS_MQTT_QOS_AT_LEAST_ONCE);
+    pub const AT_MOST_ONCE: Self = Self(AWS_MQTT_QOS_AT_MOST_ONCE);
+    pub const EXACTLY_ONCE: Self = Self(AWS_MQTT_QOS_EXACTLY_ONCE);
 }
