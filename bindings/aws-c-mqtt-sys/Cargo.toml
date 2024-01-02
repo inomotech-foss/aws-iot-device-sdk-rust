@@ -1,6 +1,6 @@
 [package]
 name = "aws-c-mqtt-sys"
-version = "0.1.0+v0.10.0"
+version = "0.1.0+v0.10.1"
 links = "aws-c-mqtt"
 authors.workspace = true
 edition.workspace = true

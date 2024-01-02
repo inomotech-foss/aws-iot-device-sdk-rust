@@ -1,6 +1,6 @@
 [package]
 name = "aws-c-common-sys"
-version = "0.1.0+v0.9.10"
+version = "0.1.0+v0.9.12"
 links = "aws-c-common"
 authors.workspace = true
 edition.workspace = true

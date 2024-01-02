@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import argparse
 import dataclasses
 import itertools
@@ -41,7 +43,9 @@ class CargoPackage:
             # if aws-c-builder is present the default value for enable is True!
             builder_meta.enable = bool(builder_meta_data.get("enable", True))
             builder_meta.repo = builder_meta_data.get("repo")
-            builder_meta.include_patterns = builder_meta_data.get("include_patterns")
+            builder_meta.include_patterns = builder_meta_data.get(
+                "include_patterns", []
+            )
 
         return cls(
             cargo_path=cargo_path,
