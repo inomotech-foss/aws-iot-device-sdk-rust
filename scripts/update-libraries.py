@@ -151,7 +151,7 @@ def main() -> None:
     ns = _parse_args()
     op: Literal["apply"] | Literal["check"] = ns.op
 
-    for package_path in (_PROJECT_DIR / "packages").iterdir():
+    for package_path in (_PROJECT_DIR / "bindings").iterdir():
         if not package_path.is_dir():
             continue
 

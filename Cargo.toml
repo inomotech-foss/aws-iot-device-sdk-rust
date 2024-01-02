@@ -1,5 +1,5 @@
 [workspace]
-members = ["packages/*"]
+members = ["bindings/*", "packages/*"]
 resolver = "2"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/workspaces.html
@@ -16,19 +16,20 @@ repository = "https://github.com/inomotech-foss/aws-iot-device-sdk-rust"
 publish = false
 
 [workspace.dependencies]
-aws-c-auth-sys = { path = "packages/aws-c-auth-sys" }
+aws-c-auth-sys = { path = "bindings/aws-c-auth-sys" }
+aws-c-cal-sys = { path = "bindings/aws-c-cal-sys" }
+aws-c-common-sys = { path = "bindings/aws-c-common-sys" }
+aws-c-compression-sys = { path = "bindings/aws-c-compression-sys" }
+aws-c-event-stream-sys = { path = "bindings/aws-c-event-stream-sys" }
+aws-c-http-sys = { path = "bindings/aws-c-http-sys" }
+aws-c-io-sys = { path = "bindings/aws-c-io-sys" }
+aws-c-iot-sys = { path = "bindings/aws-c-iot-sys" }
+aws-c-mqtt-sys = { path = "bindings/aws-c-mqtt-sys" }
+aws-c-s3-sys = { path = "bindings/aws-c-s3-sys" }
+aws-c-sdkutils-sys = { path = "bindings/aws-c-sdkutils-sys" }
+aws-checksums-sys = { path = "bindings/aws-checksums-sys" }
+
 aws-c-builder = { path = "packages/aws-c-builder" }
-aws-c-cal-sys = { path = "packages/aws-c-cal-sys" }
-aws-c-common-sys = { path = "packages/aws-c-common-sys" }
-aws-c-compression-sys = { path = "packages/aws-c-compression-sys" }
-aws-c-event-stream-sys = { path = "packages/aws-c-event-stream-sys" }
-aws-c-http-sys = { path = "packages/aws-c-http-sys" }
-aws-c-io-sys = { path = "packages/aws-c-io-sys" }
-aws-c-iot-sys = { path = "packages/aws-c-iot-sys" }
-aws-c-mqtt-sys = { path = "packages/aws-c-mqtt-sys" }
-aws-c-s3-sys = { path = "packages/aws-c-s3-sys" }
-aws-c-sdkutils-sys = { path = "packages/aws-c-sdkutils-sys" }
-aws-checksums-sys = { path = "packages/aws-checksums-sys" }
 aws-crt = { path = "packages/aws-crt" }
 
 aws-lc-sys = "0.12"
