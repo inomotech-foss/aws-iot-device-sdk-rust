@@ -32,5 +32,7 @@ fn main() {
         }
     }
 
+    // TODO: separate bindings for ios because of
+    // aws_ecc_key_pair_new_generate_random
     builder.dependency("AWS_C_COMMON").build();
 }

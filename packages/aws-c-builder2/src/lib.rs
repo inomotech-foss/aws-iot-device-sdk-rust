@@ -61,14 +61,22 @@ impl<'a> Builder<'a> {
         let include_dir = self.lib_dir.join("include");
         println!("cargo:include={}", include_dir.to_str().unwrap());
 
-        let include_dirs =
-            std::iter::once(include_dir)
-                .chain(self.dependencies.iter().map(|name| {
-                    PathBuf::from(std::env::var(format!("DEP_{name}_INCLUDE")).unwrap())
-                }))
-                .collect::<Vec<_>>();
+        let include_dirs = std::iter::once(include_dir)
+            .chain(
+                self.dependencies
+                    .iter()
+                    .map(|name| get_dep_include_path(name)),
+            )
+            .collect::<Vec<_>>();
 
         self::compile::run(self, &include_dirs);
         self::bindings::prepare(&out_dir, &include_dirs, self.bindings_suffix);
     }
+}
+
+fn get_dep_include_path(name: &str) -> PathBuf {
+    let Some(raw) = std::env::var_os(format!("DEP_{name}_INCLUDE")) else {
+        panic!("dependency {name} didn't set 'include' variable");
+    };
+    PathBuf::from(raw)
 }

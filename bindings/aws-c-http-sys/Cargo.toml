@@ -13,9 +13,10 @@ rust-version.workspace = true
 enable = true
 
 [dependencies]
+aws-c-cal-sys.workspace = true
 aws-c-common-sys.workspace = true
 aws-c-compression-sys.workspace = true
 aws-c-io-sys.workspace = true
 
 [build-dependencies]
-aws-c-builder.workspace = true
+aws-c-builder2.workspace = true
