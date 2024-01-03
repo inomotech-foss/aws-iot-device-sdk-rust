@@ -17,8 +17,8 @@ aws-c-cal-sys.workspace = true
 aws-c-common-sys.workspace = true
 libc.workspace = true
 
-[target.'cfg(all(unix, not(target_os = "macos")))'.dependencies]
+[target.'cfg(all(unix, not(target_vendor = "apple")))'.dependencies]
 s2n-tls-sys.workspace = true
 
 [build-dependencies]
-aws-c-builder.workspace = true
+aws-c-builder2.workspace = true
