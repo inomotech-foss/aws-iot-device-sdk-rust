@@ -20,6 +20,7 @@ class CargoPackage:
         enable: bool = False
         repo: str | None = None
         include_patterns: list[str] = dataclasses.field(default_factory=list)
+        exclude_patterns: list[str] = dataclasses.field(default_factory=list)
 
     cargo_path: Path
     name: str
@@ -43,9 +44,14 @@ class CargoPackage:
             # if aws-c-builder is present the default value for enable is True!
             builder_meta.enable = bool(builder_meta_data.get("enable", True))
             builder_meta.repo = builder_meta_data.get("repo")
-            builder_meta.include_patterns = builder_meta_data.get(
-                "include_patterns", []
-            )
+            try:
+                builder_meta.include_patterns = builder_meta_data["include_patterns"]
+            except KeyError:
+                pass
+            try:
+                builder_meta.exclude_patterns = builder_meta_data["exclude_patterns"]
+            except KeyError:
+                pass
 
         return cls(
             cargo_path=cargo_path,
@@ -103,8 +109,15 @@ def _apply_package_code(package: CargoPackage, temp_dir: Path) -> None:
         _DEFAULT_INCLUDE_PATTERNS, package.builder_meta.include_patterns
     ):
         for path in temp_dir.glob(pattern):
-            dst = lib_dir / path.relative_to(temp_dir)
-            shutil.move(path, dst)
+            rel_path = path.relative_to(temp_dir)
+            shutil.move(path, lib_dir / rel_path)
+
+    for pattern in package.builder_meta.exclude_patterns:
+        for path in lib_dir.glob(pattern):
+            if path.is_dir():
+                shutil.rmtree(path)
+            else:
+                path.unlink()
 
 
 def _check_package_update(package: CargoPackage) -> None:
