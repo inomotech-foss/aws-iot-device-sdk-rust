@@ -1,19 +1,28 @@
 use std::path::{Path, PathBuf};
 
-pub fn run(lib_dir: &Path, include_dirs: &[PathBuf], source_subdirs: &[&str]) {
-    println!("cargo:rerun-if-changed={}", lib_dir.to_str().unwrap());
+use crate::Builder;
 
-    let lib_name = lib_dir.file_name().unwrap().to_str().unwrap();
+pub fn run(builder: &mut Builder, include_dirs: &[PathBuf]) {
+    println!(
+        "cargo:rerun-if-changed={}",
+        builder.lib_dir.to_str().unwrap()
+    );
+
+    let lib_name = builder.lib_dir.file_name().unwrap().to_str().unwrap();
     let mut build = cc::Build::new();
     build
         .warnings(true)
         .extra_warnings(true)
         .includes(include_dirs);
 
-    let source_dir = lib_dir.join("source");
+    let source_dir = builder.lib_dir.join("source");
     build_files_dir(&mut build, &source_dir);
-    for subdir in source_subdirs {
+    for subdir in &builder.source_subdirs {
         build_files_dir(&mut build, &source_dir.join(subdir));
+    }
+
+    for cb in &mut builder.cc_callbacks {
+        cb(&mut build);
     }
 
     build.compile(lib_name);

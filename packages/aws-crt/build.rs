@@ -4,6 +4,8 @@ fn main() {
 
     println!("cargo:rerun-if-changed=src/glue/logging.c");
     cc::Build::new()
+        .warnings(true)
+        .extra_warnings(true)
         .includes(dependency_includes)
         .file("src/glue/logging.c")
         .compile("glue");

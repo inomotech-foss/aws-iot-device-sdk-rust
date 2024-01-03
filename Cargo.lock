@@ -98,7 +98,7 @@ dependencies = [
 name = "aws-c-io-sys"
 version = "0.1.0+v0.14.0"
 dependencies = [
- "aws-c-builder",
+ "aws-c-builder2",
  "aws-c-cal-sys",
  "aws-c-common-sys",
  "libc",

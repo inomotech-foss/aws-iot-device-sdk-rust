@@ -1,5 +1,3 @@
-use std::path::Path;
-
 enum Target {
     Darwin,
     Unix,
@@ -20,7 +18,7 @@ impl Target {
 
 fn main() {
     let target = Target::determine();
-    let mut builder = aws_c_builder2::Builder::new(Path::new("aws-c-cal"));
+    let mut builder = aws_c_builder2::Builder::new("aws-c-cal");
     match target {
         Target::Darwin => {
             builder.source_subdir("darwin");

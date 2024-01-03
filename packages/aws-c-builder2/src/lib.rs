@@ -1,20 +1,27 @@
 use std::path::{Path, PathBuf};
 
+pub use cc;
+
 mod bindings;
 mod compile;
 
 pub struct Builder<'a> {
-    lib_dir: &'a Path,
+    lib_dir: PathBuf,
     dependencies: Vec<&'a str>,
     source_subdirs: Vec<&'a str>,
+    cc_callbacks: Vec<Box<dyn FnMut(&mut cc::Build) + 'a>>,
+    bindings_suffix: &'a str,
 }
 
 impl<'a> Builder<'a> {
-    pub fn new(lib_dir: &'a Path) -> Self {
+    pub fn new(lib_dir: impl AsRef<Path>) -> Self {
+        let lib_dir = lib_dir.as_ref().canonicalize().expect("lib dir");
         Self {
             lib_dir,
             dependencies: Vec::new(),
             source_subdirs: Vec::new(),
+            cc_callbacks: Vec::new(),
+            bindings_suffix: "",
         }
     }
 
@@ -38,6 +45,16 @@ impl<'a> Builder<'a> {
         self
     }
 
+    pub fn cc_callback(&mut self, cb: impl FnMut(&mut cc::Build) + 'a) -> &mut Self {
+        self.cc_callbacks.push(Box::new(cb));
+        self
+    }
+
+    pub fn bindings_suffix(&mut self, value: &'a str) -> &mut Self {
+        self.bindings_suffix = value;
+        self
+    }
+
     pub fn build(&mut self) {
         let out_dir = PathBuf::from(std::env::var_os("OUT_DIR").unwrap());
 
@@ -51,7 +68,7 @@ impl<'a> Builder<'a> {
                 }))
                 .collect::<Vec<_>>();
 
-        self::compile::run(&self.lib_dir, &include_dirs, &self.source_subdirs);
-        self::bindings::prepare(&out_dir, &include_dirs);
+        self::compile::run(self, &include_dirs);
+        self::bindings::prepare(&out_dir, &include_dirs, self.bindings_suffix);
     }
 }

@@ -1,8 +1,8 @@
 use std::path::{Path, PathBuf};
 
-pub fn prepare(out_dir: &Path, include_dirs: &[PathBuf]) {
+pub fn prepare(out_dir: &Path, include_dirs: &[PathBuf], bindings_suffix: &str) {
     let bindings_dir = Path::new("bindings");
-    let bindings_file = bindings_dir.join("wrapper.rs");
+    let bindings_file = bindings_dir.join(get_bindings_file_name(bindings_suffix));
     println!("cargo:rerun-if-changed={}", bindings_file.to_str().unwrap());
 
     #[cfg(feature = "generate-bindings")]
@@ -13,6 +13,15 @@ pub fn prepare(out_dir: &Path, include_dirs: &[PathBuf]) {
         eprintln!("HINT: try enabling the 'generate-bindings' feature to generate the bindings.");
         panic!("failed to copy bindings to target directory: {err}");
     };
+}
+
+fn get_bindings_file_name(suffix: &str) -> String {
+    const PREFIX: &str = "wrapper";
+    if suffix.is_empty() {
+        format!("{PREFIX}.rs")
+    } else {
+        format!("{PREFIX}_{suffix}.rs")
+    }
 }
 
 #[cfg(feature = "generate-bindings")]

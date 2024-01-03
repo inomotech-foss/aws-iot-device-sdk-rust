@@ -1,7 +1,5 @@
-use std::path::Path;
-
 fn main() {
-    aws_c_builder2::Builder::new(Path::new("aws-c-auth"))
+    aws_c_builder2::Builder::new("aws-c-auth")
         .dependencies([
             "AWS_C_CAL",
             "AWS_C_COMMON",
