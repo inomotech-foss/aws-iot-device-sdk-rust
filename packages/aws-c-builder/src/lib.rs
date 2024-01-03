@@ -81,6 +81,7 @@ impl<'a> Config<'a> {
             .join(";");
         println!("cargo:cmake_prefix_path={cmake_prefix_path}");
         let out_dir = self.compile(&cmake_prefix_path);
+        println!("cargo:include={out_dir}/include");
         if self.run_bindgen {
             self.generate_bindings(&out_dir, &dependency_root_paths);
         }
