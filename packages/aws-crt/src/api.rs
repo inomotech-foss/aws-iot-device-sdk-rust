@@ -1,5 +1,3 @@
-use std::sync::OnceLock;
-
 use aws_c_event_stream_sys::{aws_event_stream_library_clean_up, aws_event_stream_library_init};
 use aws_c_mqtt_sys::{aws_mqtt_library_clean_up, aws_mqtt_library_init};
 use aws_c_s3_sys::{aws_s3_library_clean_up, aws_s3_library_init};
@@ -14,7 +12,7 @@ pub struct ApiHandle {
 
 impl ApiHandle {
     pub fn get() -> &'static Self {
-        static INIT: OnceLock<ApiHandle> = OnceLock::new();
+        static INIT: std::sync::OnceLock<ApiHandle> = std::sync::OnceLock::new();
         INIT.get_or_init(|| unsafe { Self::new_unchecked_racy(Allocator::default()) })
     }
 

@@ -3,21 +3,22 @@ use core::ffi::{c_int, c_void};
 use aws_c_common_sys::aws_byte_cursor;
 use aws_c_mqtt_sys::{
     aws_mqtt_client, aws_mqtt_client_acquire, aws_mqtt_client_connection,
-    aws_mqtt_client_connection_acquire, aws_mqtt_client_connection_connect,
-    aws_mqtt_client_connection_disconnect, aws_mqtt_client_connection_new,
-    aws_mqtt_client_connection_publish, aws_mqtt_client_connection_release,
-    aws_mqtt_client_connection_set_login, aws_mqtt_client_connection_set_reconnect_timeout,
-    aws_mqtt_client_connection_set_will, aws_mqtt_client_connection_subscribe, aws_mqtt_client_new,
-    aws_mqtt_client_release, aws_mqtt_connection_options, aws_mqtt_qos, AWS_MQTT_QOS_AT_LEAST_ONCE,
-    AWS_MQTT_QOS_AT_MOST_ONCE, AWS_MQTT_QOS_EXACTLY_ONCE,
+    aws_mqtt_client_connection_acquire, aws_mqtt_client_connection_disconnect,
+    aws_mqtt_client_connection_new, aws_mqtt_client_connection_publish,
+    aws_mqtt_client_connection_release, aws_mqtt_client_connection_set_login,
+    aws_mqtt_client_connection_set_reconnect_timeout, aws_mqtt_client_connection_set_will,
+    aws_mqtt_client_connection_subscribe, aws_mqtt_client_new, aws_mqtt_client_release,
+    aws_mqtt_qos, AWS_MQTT_QOS_AT_LEAST_ONCE, AWS_MQTT_QOS_AT_MOST_ONCE, AWS_MQTT_QOS_EXACTLY_ONCE,
 };
 
+pub use self::connect::*;
 pub use self::futures::{PacketFuture, TaskFuture};
 use self::subscribe::PublishCallback;
 pub use self::subscribe::SubscribeAck;
 use crate::io::ClientBootstrap;
 use crate::{AllocatorRef, ByteCursor, Error, Result};
 
+mod connect;
 mod futures;
 mod subscribe;
 
@@ -27,6 +28,7 @@ ref_counted_wrapper!(struct ClientInner(aws_mqtt_client) {
 });
 
 #[derive(Clone)]
+#[repr(transparent)]
 pub struct Client(ClientInner);
 
 impl Client {
@@ -40,6 +42,10 @@ impl Client {
     pub const fn as_ptr(&self) -> *mut aws_mqtt_client {
         self.0.as_ptr()
     }
+
+    pub fn create_connection(&self) -> Result<Connection> {
+        Connection::new(self)
+    }
 }
 
 ref_counted_wrapper!(struct ConnectionInner(aws_mqtt_client_connection) {
@@ -48,6 +54,7 @@ ref_counted_wrapper!(struct ConnectionInner(aws_mqtt_client_connection) {
 });
 
 #[derive(Clone)]
+#[repr(transparent)]
 pub struct Connection(ConnectionInner);
 
 impl Connection {
@@ -96,36 +103,12 @@ impl Connection {
         })
     }
 
-    pub fn connect(
-        &self,
-        client_id: &str,
-        clean_session: bool,
-        keep_alive_time_secs: u16,
-        ping_timeout_ms: u32,
-        protocol_operation_timeout_ms: u32,
-    ) -> Result<()> {
-        let options = aws_mqtt_connection_options {
-            host_name: todo!(),
-            port: todo!(),
-            socket_options: todo!(),
-            tls_options: todo!(),
-            client_id: ByteCursor::from_str(client_id).into_inner(),
-            keep_alive_time_secs,
-            ping_timeout_ms,
-            protocol_operation_timeout_ms,
-            on_connection_complete: todo!(),
-            user_data: todo!(),
-            clean_session,
-        };
-        Error::check_rc(unsafe { aws_mqtt_client_connection_connect(self.as_ptr(), &options) })
-    }
-
-    pub fn disconnect(&self) -> TaskFuture {
+    pub fn disconnect(&self) -> TaskFuture<()> {
         unsafe extern "C" fn on_disconnect(
             _connection: *mut aws_mqtt_client_connection,
             userdata: *mut c_void,
         ) {
-            TaskFuture::resolve(userdata, Ok(()));
+            TaskFuture::<()>::resolve(userdata, Ok(()));
         }
 
         let (resolver, fut) = crate::future::create();
@@ -210,6 +193,7 @@ impl Connection {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[repr(transparent)]
 pub struct Qos(pub(crate) aws_mqtt_qos);
 
 impl Qos {

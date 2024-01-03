@@ -26,3 +26,6 @@ log.workspace = true
 [build-dependencies]
 aws-c-builder.workspace = true
 cc.workspace = true
+
+[dev-dependencies]
+env_logger.workspace = true

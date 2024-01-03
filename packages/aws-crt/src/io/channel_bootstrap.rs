@@ -42,7 +42,7 @@ impl ClientBootstrap {
         self.0.as_ptr()
     }
 
-    pub async fn shutdown(self) {
+    pub async fn wait_shutdown(self) {
         drop(self); // release my handle
         todo!()
     }

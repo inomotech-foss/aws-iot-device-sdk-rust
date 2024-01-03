@@ -3,6 +3,7 @@ macro_rules! ref_counted_wrapper {
         acquire: $acquire_fn:path,
         release: $release_fn:path,
     }) => {
+        #[repr(transparent)]
         $vis struct $wrapper_name(::core::ptr::NonNull<$inner_ty>);
 
         impl $wrapper_name {

@@ -25,7 +25,9 @@ pub(crate) struct CallbackFutureResolver<T> {
 
 impl<T> CallbackFutureResolver<T> {
     pub fn into_raw(self) -> *mut c_void {
-        Arc::into_raw(self.inner).cast::<c_void>().cast_mut()
+        let ptr = Arc::as_ptr(&self.inner).cast::<c_void>().cast_mut();
+        core::mem::forget(self);
+        ptr
     }
 
     pub unsafe fn from_raw(raw: *mut c_void) -> Self {
@@ -50,6 +52,11 @@ impl<T> CallbackFutureResolver<crate::Result<T>> {
     }
 }
 
+impl<T> Drop for CallbackFutureResolver<T> {
+    fn drop(&mut self) {
+        self.inner.drop_tx()
+    }
+}
 pub struct CallbackFuture<T> {
     inner: Arc<Inner<T>>,
 }
@@ -140,6 +147,37 @@ impl<T> Inner<T> {
 
     fn is_canceled(&self) -> bool {
         self.complete.load(SeqCst)
+    }
+
+    fn drop_tx(&self) {
+        // Flag that we're a completed `Sender` and try to wake up a receiver.
+        // Whether or not we actually stored any data will get picked up and
+        // translated to either an item or cancellation.
+        //
+        // Note that if we fail to acquire the `rx_task` lock then that means
+        // we're in one of two situations:
+        //
+        // 1. The receiver is trying to block in `poll`
+        // 2. The receiver is being dropped
+        //
+        // In the first case it'll check the `complete` flag after it's done
+        // blocking to see if it succeeded. In the latter case we don't need to
+        // wake up anyone anyway. So in both cases it's ok to ignore the `None`
+        // case of `try_lock` and bail out.
+        //
+        // The first case crucially depends on `Lock` using `SeqCst` ordering
+        // under the hood. If it instead used `Release` / `Acquire` ordering,
+        // then it would not necessarily synchronize with `inner.complete`
+        // and deadlock might be possible, as was observed in
+        // https://github.com/rust-lang/futures-rs/pull/219.
+        self.complete.store(true, SeqCst);
+
+        if let Some(mut slot) = self.rx_task.try_lock() {
+            if let Some(task) = slot.take() {
+                drop(slot);
+                task.wake();
+            }
+        }
     }
 
     fn try_recv(&self) -> Option<T> {

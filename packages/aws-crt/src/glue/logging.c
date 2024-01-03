@@ -27,6 +27,7 @@ s_acglu_format_to_string(struct aws_allocator *allocator, const char *format,
   if (raw_string == NULL) {
     return NULL;
   }
+  *(struct aws_allocator **)(&raw_string->allocator) = allocator;
 
 #ifdef _WIN32
   int written_count = vsnprintf_s((char *)raw_string->bytes, required_length,
@@ -39,6 +40,8 @@ s_acglu_format_to_string(struct aws_allocator *allocator, const char *format,
     aws_string_destroy(raw_string);
     return NULL;
   }
+
+  *(size_t *)(&raw_string->len) = written_count;
 
   return raw_string;
 }

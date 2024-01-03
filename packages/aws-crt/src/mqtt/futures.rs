@@ -10,31 +10,35 @@ use crate::{Error, Result};
 
 #[must_use]
 #[derive(Debug)]
-pub struct TaskFuture {
-    state: State<()>,
+pub struct TaskFuture<T> {
+    state: State<T>,
 }
 
-impl TaskFuture {
+impl<T> TaskFuture<T> {
     pub const fn check(&self) -> Result<()> {
         self.state.check()
     }
 
-    pub(crate) fn create(res: Result<()>, fut: CallbackFuture<Result<()>>) -> Self {
+    pub fn started(self) -> Result<Self> {
+        self.check().map(|_| self)
+    }
+
+    pub(crate) fn create(res: Result<()>, fut: CallbackFuture<Result<T>>) -> Self {
         let state = match res {
-            Ok(()) => State::Running(fut),
+            Ok(_) => State::Running(fut),
             Err(err) => State::Error(err),
         };
         Self { state }
     }
 
-    pub(crate) unsafe fn resolve(userdata: *mut c_void, res: Result<()>) {
-        let resolver = CallbackFutureResolver::<Result<()>>::from_raw(userdata);
+    pub(crate) unsafe fn resolve(userdata: *mut c_void, res: Result<T>) {
+        let resolver = CallbackFutureResolver::<Result<T>>::from_raw(userdata);
         resolver.resolve(res);
     }
 }
 
-impl Future for TaskFuture {
-    type Output = Result<()>;
+impl<T> Future for TaskFuture<T> {
+    type Output = Result<T>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut core::task::Context<'_>) -> Poll<Self::Output> {
         let this = self.get_mut();
@@ -58,6 +62,10 @@ impl<T> PacketFuture<T> {
         self.state.check()
     }
 
+    pub fn started(self) -> Result<Self> {
+        self.check().map(|_| self)
+    }
+
     pub(crate) fn create(packet_id: u16, fut: CallbackFuture<Result<T>>) -> Self {
         let state = if packet_id == 0 {
             State::Error(Error::last_in_current_thread())
@@ -75,8 +83,7 @@ impl<T> PacketFuture<T> {
 
 impl PacketFuture<()> {
     pub(crate) unsafe fn resolve_with_error_code(userdata: *mut c_void, error_code: c_int) {
-        let resolver = CallbackFutureResolver::<Result<()>>::from_raw(userdata);
-        resolver.resolve(Error::check_rc(error_code));
+        Self::resolve(userdata, Error::check_rc(error_code));
     }
 }
 
