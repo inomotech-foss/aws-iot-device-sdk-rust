@@ -30,6 +30,7 @@ aws-c-sdkutils-sys = { path = "bindings/aws-c-sdkutils-sys" }
 aws-checksums-sys = { path = "bindings/aws-checksums-sys" }
 
 aws-c-builder = { path = "packages/aws-c-builder" }
+aws-c-builder2 = { path = "packages/aws-c-builder2" }
 aws-crt = { path = "packages/aws-crt" }
 
 aws-lc-sys = "0.12"
@@ -42,5 +43,5 @@ futures = "0.3"
 libc = "0.2"
 log = "0.4"
 s2n-tls-sys = "0.1.0"
-schannel = "0.1"
-security-framework = "2"
+security-framework-sys = "2"
+windows-sys = { version = "0.52", features = ["Win32_Security_Cryptography"] }

@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-pub fn run(lib_dir: &Path, include_dirs: &[PathBuf]) {
+pub fn run(lib_dir: &Path, include_dirs: &[PathBuf], source_subdirs: &[&str]) {
     println!("cargo:rerun-if-changed={}", lib_dir.to_str().unwrap());
 
     let lib_name = lib_dir.file_name().unwrap().to_str().unwrap();
@@ -9,7 +9,13 @@ pub fn run(lib_dir: &Path, include_dirs: &[PathBuf]) {
         .warnings(true)
         .extra_warnings(true)
         .includes(include_dirs);
-    build_files_dir(&mut build, &lib_dir.join("source"));
+
+    let source_dir = lib_dir.join("source");
+    build_files_dir(&mut build, &source_dir);
+    for subdir in source_subdirs {
+        build_files_dir(&mut build, &source_dir.join(subdir));
+    }
+
     build.compile(lib_name);
 }
 

@@ -76,7 +76,6 @@ _DEFAULT_INCLUDE_PATTERNS: list[str] = [
     "include/",
     "LICENSE",
     "source/",
-    "VERSION",
 ]
 
 

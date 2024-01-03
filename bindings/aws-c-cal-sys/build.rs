@@ -1,47 +1,38 @@
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
-fn main() {
-    let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
-    let cmake_import_dir;
-    let mut config = aws_c_builder::Config::new("aws-c-cal");
-
-    if aws_c_builder::is_linux_like() {
-        cmake_import_dir = out_dir.join("_cmake_imports");
-        std::fs::create_dir_all(&cmake_import_dir).unwrap();
-
-        create_crypto_package_config(&cmake_import_dir);
-        config = config.extra_cmake_prefix_paths([cmake_import_dir.to_str().unwrap()]);
-    }
-
-    config
-        .aws_dependencies(["AWS_C_COMMON"])
-        .bindgen_callback(|builder| {
-            builder
-                .allowlist_item("(?i)aws_(c_)?cal.*")
-                .allowlist_item("(?i)aws_ecc.*")
-                .allowlist_item("(?i)aws_hash.*")
-                .allowlist_item("(?i)aws_hmac.*")
-                .allowlist_item("(?i)aws_rsa.*")
-                .allowlist_item("(?i)aws_symmetric.*")
-        })
-        .build();
-
-    // we need to remove this file so it doesn't take precedence over our
-    // crypto-config.cmake file.
-    std::fs::remove_file(out_dir.join("lib/aws-c-cal/cmake/modules/Findcrypto.cmake")).unwrap();
+enum Target {
+    Darwin,
+    Unix,
+    Windows,
 }
 
-fn create_crypto_package_config(target_dir: &Path) {
-    use std::fmt::Write;
+impl Target {
+    fn determine() -> Self {
+        let target_family = std::env::var("CARGO_CFG_TARGET_FAMILY").unwrap();
+        let target_vendor = std::env::var("CARGO_CFG_TARGET_VENDOR").unwrap();
+        match (target_family.as_str(), target_vendor.as_str()) {
+            ("windows", _) => Self::Windows,
+            (_, "apple") => Self::Darwin,
+            _ => Self::Unix,
+        }
+    }
+}
 
-    let aws_lc_root = std::env::var("DEP_AWS_LC_0_12_1_ROOT").unwrap();
+fn main() {
+    let target = Target::determine();
+    let mut builder = aws_c_builder2::Builder::new(Path::new("aws-c-cal"));
+    match target {
+        Target::Darwin => {
+            builder.source_subdir("darwin");
+        }
+        Target::Unix => {
+            builder.dependency("AWS_LC_0_12_1");
+            builder.source_subdir("unix");
+        }
+        Target::Windows => {
+            builder.source_subdir("windows");
+        }
+    }
 
-    let mut content = String::new();
-    writeln!(&mut content, "add_library(AWS::crypto STATIC IMPORTED)").unwrap();
-    writeln!(
-        &mut content,
-        "target_include_directories(AWS::crypto INTERFACE \"{aws_lc_root}/include\")"
-    )
-    .unwrap();
-    std::fs::write(target_dir.join("crypto-config.cmake"), content).unwrap();
+    builder.dependency("AWS_C_COMMON").build();
 }

@@ -6,6 +6,7 @@ mod compile;
 pub struct Builder<'a> {
     lib_dir: &'a Path,
     dependencies: Vec<&'a str>,
+    source_subdirs: Vec<&'a str>,
 }
 
 impl<'a> Builder<'a> {
@@ -13,11 +14,27 @@ impl<'a> Builder<'a> {
         Self {
             lib_dir,
             dependencies: Vec::new(),
+            source_subdirs: Vec::new(),
         }
     }
 
     pub fn dependencies(&mut self, iter: impl IntoIterator<Item = &'a str>) -> &mut Self {
         self.dependencies.extend(iter);
+        self
+    }
+
+    pub fn dependency(&mut self, value: &'a str) -> &mut Self {
+        self.dependencies.push(value);
+        self
+    }
+
+    pub fn source_subdirs(&mut self, iter: impl IntoIterator<Item = &'a str>) -> &mut Self {
+        self.source_subdirs.extend(iter);
+        self
+    }
+
+    pub fn source_subdir(&mut self, value: &'a str) -> &mut Self {
+        self.source_subdirs.push(value);
         self
     }
 
@@ -34,7 +51,7 @@ impl<'a> Builder<'a> {
                 }))
                 .collect::<Vec<_>>();
 
-        self::compile::run(&self.lib_dir, &include_dirs);
+        self::compile::run(&self.lib_dir, &include_dirs, &self.source_subdirs);
         self::bindings::prepare(&out_dir, &include_dirs);
     }
 }

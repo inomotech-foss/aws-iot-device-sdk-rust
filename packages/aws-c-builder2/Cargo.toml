@@ -14,4 +14,3 @@ generate-bindings = ["dep:bindgen"]
 [dependencies]
 bindgen = { workspace = true, optional = true }
 cc.workspace = true
-glob.workspace = true
