@@ -110,7 +110,7 @@ dependencies = [
 name = "aws-c-iot-sys"
 version = "0.1.0+v0.1.19"
 dependencies = [
- "aws-c-builder",
+ "aws-c-builder2",
  "aws-c-common-sys",
  "aws-c-http-sys",
  "aws-c-io-sys",
@@ -121,7 +121,7 @@ dependencies = [
 name = "aws-c-mqtt-sys"
 version = "0.1.0+v0.10.1"
 dependencies = [
- "aws-c-builder",
+ "aws-c-builder2",
  "aws-c-common-sys",
  "aws-c-http-sys",
  "aws-c-io-sys",

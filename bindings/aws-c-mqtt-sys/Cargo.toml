@@ -18,4 +18,4 @@ aws-c-http-sys.workspace = true
 aws-c-io-sys.workspace = true
 
 [build-dependencies]
-aws-c-builder.workspace = true
+aws-c-builder2.workspace = true
