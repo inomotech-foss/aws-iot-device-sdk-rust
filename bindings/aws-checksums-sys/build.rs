@@ -1,6 +1,7 @@
 fn main() {
-    aws_c_builder::Config::new("aws-checksums")
-        .aws_dependencies(["AWS_C_COMMON"])
-        .bindgen_callback(|builder| builder.allowlist_item("(?i)aws_checksums.*"))
+    // TODO: CPU-specific extensions
+    aws_c_builder2::Builder::new("aws-checksums")
+        .dependency("AWS_C_COMMON")
+        .source_subdir("generic")
         .build();
 }

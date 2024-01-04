@@ -153,7 +153,7 @@ dependencies = [
 name = "aws-checksums-sys"
 version = "0.1.0+v0.1.17"
 dependencies = [
- "aws-c-builder",
+ "aws-c-builder2",
  "aws-c-common-sys",
 ]
 
