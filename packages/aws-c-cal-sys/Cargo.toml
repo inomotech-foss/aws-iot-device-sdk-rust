@@ -22,4 +22,5 @@ security-framework.workspace = true
 aws-lc-sys.workspace = true
 
 [build-dependencies]
+anyhow.workspace = true
 aws-c-builder.workspace = true

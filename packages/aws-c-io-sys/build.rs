@@ -9,7 +9,7 @@ fn main() {
         cmake_import_dir = out_dir.join("_cmake_imports");
         std::fs::create_dir_all(&cmake_import_dir).unwrap();
 
-        create_s2n_package_config(&cmake_import_dir);
+        create_s2n_package_config(&cmake_import_dir).unwrap();
         config = config.extra_cmake_prefix_paths([cmake_import_dir.to_str().unwrap()]);
     }
 
@@ -42,17 +42,19 @@ fn main() {
         .build();
 }
 
-fn create_s2n_package_config(target_dir: &Path) {
+fn create_s2n_package_config(target_dir: &Path) -> anyhow::Result<()> {
     use std::fmt::Write;
 
-    let s2n_include = std::env::var("DEP_S2N_TLS_INCLUDE").unwrap();
+    let s2n_include = std::env::var("DEP_S2N_TLS_INCLUDE")?;
 
     let mut content = String::new();
-    writeln!(&mut content, "add_library(AWS::s2n STATIC IMPORTED)").unwrap();
+    writeln!(&mut content, "if (NOT TARGET AWS::s2n)")?;
+    writeln!(&mut content, "add_library(AWS::s2n STATIC IMPORTED)")?;
     writeln!(
         &mut content,
         "target_include_directories(AWS::s2n INTERFACE \"{s2n_include}\")"
-    )
-    .unwrap();
-    std::fs::write(target_dir.join("s2n-config.cmake"), content).unwrap();
+    )?;
+    writeln!(&mut content, "endif()")?;
+    std::fs::write(target_dir.join("s2n-config.cmake"), content)?;
+    Ok(())
 }

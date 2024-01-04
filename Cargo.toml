@@ -31,6 +31,7 @@ aws-c-sdkutils-sys = { path = "packages/aws-c-sdkutils-sys" }
 aws-checksums-sys = { path = "packages/aws-checksums-sys" }
 aws-crt-cpp-sys = { path = "packages/aws-crt-cpp-sys" }
 
+anyhow = "1"
 aws-lc-sys = "0.12"
 bindgen = "0.69"
 cmake = "0.1"

@@ -9,7 +9,7 @@ fn main() {
         cmake_import_dir = out_dir.join("_cmake_imports");
         std::fs::create_dir_all(&cmake_import_dir).unwrap();
 
-        create_crypto_package_config(&cmake_import_dir);
+        create_crypto_package_config(&cmake_import_dir).unwrap();
         config = config.extra_cmake_prefix_paths([cmake_import_dir.to_str().unwrap()]);
     }
 
@@ -31,17 +31,20 @@ fn main() {
     std::fs::remove_file(out_dir.join("lib/aws-c-cal/cmake/modules/Findcrypto.cmake")).unwrap();
 }
 
-fn create_crypto_package_config(target_dir: &Path) {
+fn create_crypto_package_config(target_dir: &Path) -> anyhow::Result<()> {
     use std::fmt::Write;
 
-    let aws_lc_root = std::env::var("DEP_AWS_LC_0_12_1_ROOT").unwrap();
+    let aws_lc_root = std::env::var("DEP_AWS_LC_0_12_1_ROOT")?;
 
     let mut content = String::new();
-    writeln!(&mut content, "add_library(AWS::crypto STATIC IMPORTED)").unwrap();
+    writeln!(&mut content, "if (NOT TARGET AWS::crypto)")?;
+    writeln!(&mut content, "add_library(AWS::crypto STATIC IMPORTED)")?;
     writeln!(
         &mut content,
         "target_include_directories(AWS::crypto INTERFACE \"{aws_lc_root}/include\")"
-    )
-    .unwrap();
-    std::fs::write(target_dir.join("crypto-config.cmake"), content).unwrap();
+    )?;
+    writeln!(&mut content, "endif()")?;
+    std::fs::write(target_dir.join("crypto-config.cmake"), content)?;
+
+    Ok(())
 }
