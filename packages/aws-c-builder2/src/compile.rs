@@ -13,7 +13,8 @@ pub fn run(builder: &mut Builder, include_dirs: &[PathBuf]) {
     build
         .warnings(true)
         .extra_warnings(true)
-        .includes(include_dirs);
+        .includes(include_dirs)
+        .define("INTEL_NO_ITTNOTIFY_API", None);
 
     let source_dir = builder.lib_dir.join("source");
     build_files_dir(&mut build, &source_dir);

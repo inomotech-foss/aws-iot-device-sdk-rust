@@ -15,8 +15,8 @@ enable = true
 [dependencies]
 libc.workspace = true
 
-[target.'cfg(target_os = "macos")'.dependencies]
-core-foundation.workspace = true
+[target.'cfg(target_vendor = "apple")'.dependencies]
+core-foundation-sys.workspace = true
 
 [build-dependencies]
 aws-c-builder.workspace = true

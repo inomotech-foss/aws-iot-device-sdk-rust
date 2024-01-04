@@ -1,5 +1,7 @@
 fn main() {
     let target = Target::determine();
+    eprintln!("target: {target:?}");
+
     let mut builder = aws_c_builder2::Builder::new("aws-c-cal");
     match target {
         Target::Darwin => {
@@ -19,6 +21,7 @@ fn main() {
     builder.dependency("AWS_C_COMMON").build();
 }
 
+#[derive(Debug)]
 enum Target {
     Darwin,
     Unix,

@@ -37,7 +37,7 @@ aws-lc-sys = "0.12"
 bindgen = "0.69"
 cc = { version = "1", features = ["parallel"] }
 cmake = "0.1"
-core-foundation = "0.9"
+core-foundation-sys = "0.8"
 env_logger = "0.10"
 futures = "0.3"
 libc = "0.2"
