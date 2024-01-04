@@ -1,5 +1,5 @@
 fn main() {
-    aws_c_builder::Config::new("aws-c-common")
+    aws_c_builder_cmake::Config::new("aws-c-common")
         .bindgen_blanket_include_dirs(["common"])
         .bindgen_callback(|builder| {
             builder

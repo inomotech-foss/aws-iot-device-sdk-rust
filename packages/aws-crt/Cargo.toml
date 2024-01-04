@@ -24,7 +24,7 @@ futures.workspace = true
 log.workspace = true
 
 [build-dependencies]
-aws-c-builder.workspace = true
+aws-c-builder-cmake.workspace = true
 cc.workspace = true
 
 [dev-dependencies]

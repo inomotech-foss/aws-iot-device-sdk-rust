@@ -30,7 +30,7 @@ aws-c-sdkutils-sys = { path = "bindings/aws-c-sdkutils-sys" }
 aws-checksums-sys = { path = "bindings/aws-checksums-sys" }
 
 aws-c-builder = { path = "packages/aws-c-builder" }
-aws-c-builder2 = { path = "packages/aws-c-builder2" }
+aws-c-builder-cmake = { path = "packages/aws-c-builder-cmake" }
 aws-crt = { path = "packages/aws-crt" }
 
 aws-lc-sys = "0.12"

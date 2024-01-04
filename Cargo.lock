@@ -21,7 +21,7 @@ checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 name = "aws-c-auth-sys"
 version = "0.1.0+v0.7.10"
 dependencies = [
- "aws-c-builder2",
+ "aws-c-builder",
  "aws-c-cal-sys",
  "aws-c-common-sys",
  "aws-c-http-sys",
@@ -34,22 +34,22 @@ name = "aws-c-builder"
 version = "0.1.0"
 dependencies = [
  "bindgen 0.69.1",
- "cmake",
+ "cc",
 ]
 
 [[package]]
-name = "aws-c-builder2"
+name = "aws-c-builder-cmake"
 version = "0.1.0"
 dependencies = [
  "bindgen 0.69.1",
- "cc",
+ "cmake",
 ]
 
 [[package]]
 name = "aws-c-cal-sys"
 version = "0.1.0+v0.6.9"
 dependencies = [
- "aws-c-builder2",
+ "aws-c-builder",
  "aws-c-common-sys",
  "aws-lc-sys",
  "security-framework-sys",
@@ -60,7 +60,7 @@ dependencies = [
 name = "aws-c-common-sys"
 version = "0.1.0+v0.9.12"
 dependencies = [
- "aws-c-builder",
+ "aws-c-builder-cmake",
  "core-foundation-sys",
  "libc",
 ]
@@ -69,7 +69,7 @@ dependencies = [
 name = "aws-c-compression-sys"
 version = "0.1.0+v0.2.17"
 dependencies = [
- "aws-c-builder2",
+ "aws-c-builder",
  "aws-c-common-sys",
 ]
 
@@ -77,7 +77,7 @@ dependencies = [
 name = "aws-c-event-stream-sys"
 version = "0.1.0+v0.4.0"
 dependencies = [
- "aws-c-builder2",
+ "aws-c-builder",
  "aws-c-common-sys",
  "aws-c-io-sys",
  "aws-checksums-sys",
@@ -88,7 +88,7 @@ dependencies = [
 name = "aws-c-http-sys"
 version = "0.1.0+v0.8.0"
 dependencies = [
- "aws-c-builder2",
+ "aws-c-builder",
  "aws-c-cal-sys",
  "aws-c-common-sys",
  "aws-c-compression-sys",
@@ -99,7 +99,7 @@ dependencies = [
 name = "aws-c-io-sys"
 version = "0.1.0+v0.14.0"
 dependencies = [
- "aws-c-builder2",
+ "aws-c-builder",
  "aws-c-cal-sys",
  "aws-c-common-sys",
  "libc",
@@ -110,7 +110,7 @@ dependencies = [
 name = "aws-c-iot-sys"
 version = "0.1.0+v0.1.19"
 dependencies = [
- "aws-c-builder2",
+ "aws-c-builder",
  "aws-c-common-sys",
  "aws-c-http-sys",
  "aws-c-io-sys",
@@ -121,7 +121,7 @@ dependencies = [
 name = "aws-c-mqtt-sys"
 version = "0.1.0+v0.10.1"
 dependencies = [
- "aws-c-builder2",
+ "aws-c-builder",
  "aws-c-common-sys",
  "aws-c-http-sys",
  "aws-c-io-sys",
@@ -132,7 +132,7 @@ name = "aws-c-s3-sys"
 version = "0.1.0+v0.4.9"
 dependencies = [
  "aws-c-auth-sys",
- "aws-c-builder2",
+ "aws-c-builder",
  "aws-c-cal-sys",
  "aws-c-common-sys",
  "aws-c-http-sys",
@@ -145,7 +145,7 @@ dependencies = [
 name = "aws-c-sdkutils-sys"
 version = "0.1.0+v0.1.13"
 dependencies = [
- "aws-c-builder2",
+ "aws-c-builder",
  "aws-c-common-sys",
 ]
 
@@ -153,7 +153,7 @@ dependencies = [
 name = "aws-checksums-sys"
 version = "0.1.0+v0.1.17"
 dependencies = [
- "aws-c-builder2",
+ "aws-c-builder",
  "aws-c-common-sys",
 ]
 
@@ -162,7 +162,7 @@ name = "aws-crt"
 version = "0.1.0"
 dependencies = [
  "aws-c-auth-sys",
- "aws-c-builder",
+ "aws-c-builder-cmake",
  "aws-c-cal-sys",
  "aws-c-common-sys",
  "aws-c-compression-sys",

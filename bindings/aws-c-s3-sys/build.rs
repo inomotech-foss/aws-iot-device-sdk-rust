@@ -1,5 +1,5 @@
 fn main() {
-    aws_c_builder2::Builder::new("aws-c-s3")
+    aws_c_builder::Builder::new("aws-c-s3")
         .dependencies([
             "AWS_C_AUTH",
             "AWS_C_CAL",

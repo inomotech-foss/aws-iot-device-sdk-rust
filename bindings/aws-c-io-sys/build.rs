@@ -2,7 +2,7 @@ fn main() {
     let config = Config::determine();
     eprintln!("build config: {config:?}");
 
-    let mut builder = aws_c_builder2::Builder::new("aws-c-io");
+    let mut builder = aws_c_builder::Builder::new("aws-c-io");
     if config.use_s2n {
         builder.dependency("S2N_TLS");
         builder.source_subdir("s2n");
@@ -87,7 +87,7 @@ impl EventLoop {
         }
     }
 
-    fn set_as_define(self, build: &mut aws_c_builder2::cc::Build) {
+    fn set_as_define(self, build: &mut aws_c_builder::cc::Build) {
         if let Some(value) = self.define_value() {
             build.define(&format!("AWS_USE_{value}"), None);
         }

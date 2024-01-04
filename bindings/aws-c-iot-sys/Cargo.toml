@@ -19,4 +19,4 @@ aws-c-io-sys.workspace = true
 aws-c-mqtt-sys.workspace = true
 
 [build-dependencies]
-aws-c-builder2.workspace = true
+aws-c-builder.workspace = true

@@ -16,4 +16,4 @@ enable = true
 aws-c-common-sys.workspace = true
 
 [build-dependencies]
-aws-c-builder2.workspace = true
+aws-c-builder.workspace = true

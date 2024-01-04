@@ -19,4 +19,4 @@ libc.workspace = true
 core-foundation-sys.workspace = true
 
 [build-dependencies]
-aws-c-builder.workspace = true
+aws-c-builder-cmake.workspace = true
