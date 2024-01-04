@@ -4,6 +4,7 @@ fn main() {
 
     let mut builder = aws_c_builder2::Builder::new("aws-c-io");
     if config.use_s2n {
+        builder.dependency("S2N_TLS");
         builder.source_subdir("s2n");
         builder.cc_callback(|build| {
             build.define("USE_S2N", None);
