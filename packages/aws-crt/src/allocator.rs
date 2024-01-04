@@ -18,13 +18,15 @@ impl Allocator {
     }
 
     #[inline]
+    #[must_use]
     pub fn default() -> AllocatorRef {
         unsafe { Self::new(aws_default_allocator()) }
     }
 
     #[inline]
+    #[must_use]
     pub const fn as_ptr(&self) -> *mut aws_allocator {
-        (&self.0 as *const aws_allocator).cast_mut()
+        core::ptr::addr_of!(self.0).cast_mut()
     }
 
     #[inline]
@@ -36,7 +38,7 @@ impl Allocator {
     #[inline]
     unsafe fn mem_release(&self, ptr: *mut c_void) {
         let f = self.0.mem_release.unwrap_unchecked();
-        f(self.as_ptr(), ptr)
+        f(self.as_ptr(), ptr);
     }
 
     /// # Safety

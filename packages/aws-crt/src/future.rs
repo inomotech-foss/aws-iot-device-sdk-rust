@@ -9,7 +9,7 @@ use core::sync::atomic::AtomicBool;
 use core::sync::atomic::Ordering::SeqCst;
 use core::task::{Poll, Waker};
 
-pub(crate) fn create<T>() -> (CallbackFutureResolver<T>, CallbackFuture<T>) {
+pub fn create<T>() -> (CallbackFutureResolver<T>, CallbackFuture<T>) {
     let inner = Arc::new(Inner::new());
     (
         CallbackFutureResolver {
@@ -19,7 +19,7 @@ pub(crate) fn create<T>() -> (CallbackFutureResolver<T>, CallbackFuture<T>) {
     )
 }
 
-pub(crate) struct CallbackFutureResolver<T> {
+pub struct CallbackFutureResolver<T> {
     inner: Arc<Inner<T>>,
 }
 
@@ -54,7 +54,7 @@ impl<T> CallbackFutureResolver<crate::Result<T>> {
 
 impl<T> Drop for CallbackFutureResolver<T> {
     fn drop(&mut self) {
-        self.inner.drop_tx()
+        self.inner.drop_tx();
     }
 }
 pub struct CallbackFuture<T> {
@@ -80,7 +80,7 @@ impl<T> Future for CallbackFuture<T> {
 
 impl<T> Drop for CallbackFuture<T> {
     fn drop(&mut self) {
-        self.inner.drop_rx()
+        self.inner.drop_rx();
     }
 }
 
@@ -257,14 +257,14 @@ impl<T> Inner<T> {
 /// This lock only supports the `try_lock` operation, however, and does not
 /// implement poisoning.
 #[derive(Debug)]
-pub(crate) struct Lock<T> {
+pub struct Lock<T> {
     locked: AtomicBool,
     data: UnsafeCell<T>,
 }
 
 /// Sentinel representing an acquired lock through which the data can be
 /// accessed.
-pub(crate) struct TryLock<'a, T> {
+pub struct TryLock<'a, T> {
     __ptr: &'a Lock<T>,
 }
 

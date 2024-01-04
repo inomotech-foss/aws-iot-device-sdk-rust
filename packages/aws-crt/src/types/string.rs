@@ -25,21 +25,25 @@ impl AwsStr {
     }
 
     #[inline]
+    #[must_use]
     pub const fn len(&self) -> usize {
         self.0.len
     }
 
     #[inline]
+    #[must_use]
     pub const fn is_empty(&self) -> bool {
         self.len() == 0
     }
 
     #[inline]
+    #[must_use]
     pub const fn as_bytes_ptr(&self) -> *const u8 {
         self.0.bytes.as_ptr()
     }
 
     #[inline]
+    #[must_use]
     pub const fn as_bytes(&self) -> &[u8] {
         unsafe { core::slice::from_raw_parts(self.as_bytes_ptr(), self.len()) }
     }
@@ -151,7 +155,7 @@ impl AwsString {
         Error::check_rc(unsafe {
             aws_mem_realloc(
                 allocator.as_ptr(),
-                (&mut self.0 as *mut NonNull<AwsStr>).cast(),
+                core::ptr::addr_of_mut!(self.0).cast(),
                 old_size,
                 new_size,
             )

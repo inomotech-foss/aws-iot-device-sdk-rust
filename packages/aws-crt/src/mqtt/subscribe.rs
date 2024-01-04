@@ -22,7 +22,7 @@ pub struct SubscribeAck {
     pub granted_qos: Qos,
 }
 
-pub(crate) struct PublishCallback {
+pub struct PublishCallback {
     pub on_publish: aws_mqtt_client_publish_received_fn,
     // userdata is already owned here!
     pub userdata: *mut c_void,

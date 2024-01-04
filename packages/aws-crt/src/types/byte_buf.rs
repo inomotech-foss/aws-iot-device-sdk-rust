@@ -18,6 +18,7 @@ impl<'a> ByteCursor<'a> {
     ///
     /// The byte cursor lifetime must be valid for the lifetime of 'self'.
     #[inline]
+    #[must_use]
     pub const unsafe fn from_inner(inner: aws_byte_cursor) -> Self {
         Self {
             inner,
@@ -26,6 +27,7 @@ impl<'a> ByteCursor<'a> {
     }
 
     #[inline]
+    #[must_use]
     pub const fn empty() -> Self {
         unsafe {
             Self::from_inner(aws_byte_cursor {
@@ -36,21 +38,25 @@ impl<'a> ByteCursor<'a> {
     }
 
     #[inline]
+    #[must_use]
     pub const unsafe fn from_ptr(cursor: *const aws_byte_cursor) -> Self {
         Self::from_inner(*cursor)
     }
 
     #[inline]
+    #[must_use]
     pub const fn as_ptr(&self) -> *const aws_byte_cursor {
         &self.inner
     }
 
     #[inline]
+    #[must_use]
     pub const fn into_inner(self) -> aws_byte_cursor {
         self.inner
     }
 
     #[inline]
+    #[must_use]
     pub const fn from_slice(b: &'a [u8]) -> Self {
         // SAFETY: the lifetime of the slice applies to Self
         unsafe {
@@ -63,11 +69,13 @@ impl<'a> ByteCursor<'a> {
     }
 
     #[inline]
+    #[must_use]
     pub const fn from_str(s: &'a str) -> Self {
         Self::from_slice(s.as_bytes())
     }
 
     #[inline]
+    #[must_use]
     pub const fn as_bytes(&self) -> &[u8] {
         unsafe { core::slice::from_raw_parts(self.inner.ptr, self.inner.len) }
     }
@@ -96,11 +104,13 @@ impl ByteBuf {
     }
 
     #[inline]
+    #[must_use]
     pub const fn as_bytes(&self) -> &[u8] {
         unsafe { core::slice::from_raw_parts(self.0.buffer, self.0.len) }
     }
 
     #[inline]
+    #[must_use]
     pub const fn cursor(&self) -> ByteCursor {
         ByteCursor::from_slice(self.as_bytes())
     }

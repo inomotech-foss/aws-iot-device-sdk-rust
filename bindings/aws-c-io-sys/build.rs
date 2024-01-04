@@ -77,7 +77,7 @@ enum EventLoop {
 }
 
 impl EventLoop {
-    fn define_value(self) -> Option<&'static str> {
+    const fn define_value(self) -> Option<&'static str> {
         match self {
             Self::None => None,
             Self::IoCompletionPorts => Some("IO_COMPLETION_PORTS"),
@@ -102,7 +102,7 @@ enum Bindings {
 }
 
 impl Bindings {
-    fn suffix(self) -> &'static str {
+    const fn suffix(self) -> &'static str {
         match self {
             Self::Generic => "generic",
             Self::Win32IoCompletionPorts => "win32_iocp",

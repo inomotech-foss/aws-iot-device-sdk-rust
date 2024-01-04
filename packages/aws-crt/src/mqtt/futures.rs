@@ -20,12 +20,12 @@ impl<T> TaskFuture<T> {
     }
 
     pub fn started(self) -> Result<Self> {
-        self.check().map(|_| self)
+        self.check().map(|()| self)
     }
 
     pub(crate) fn create(res: Result<()>, fut: CallbackFuture<Result<T>>) -> Self {
         let state = match res {
-            Ok(_) => State::Running(fut),
+            Ok(()) => State::Running(fut),
             Err(err) => State::Error(err),
         };
         Self { state }
@@ -54,6 +54,7 @@ pub struct PacketFuture<T> {
 }
 
 impl<T> PacketFuture<T> {
+    #[must_use]
     pub const fn packet_id(&self) -> u16 {
         self.packet_id
     }
@@ -63,7 +64,7 @@ impl<T> PacketFuture<T> {
     }
 
     pub fn started(self) -> Result<Self> {
-        self.check().map(|_| self)
+        self.check().map(|()| self)
     }
 
     pub(crate) fn create(packet_id: u16, fut: CallbackFuture<Result<T>>) -> Self {

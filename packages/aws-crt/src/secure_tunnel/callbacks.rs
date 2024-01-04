@@ -1,18 +1,13 @@
 use alloc::boxed::Box;
-use core::ffi::{c_void, CStr};
-use core::marker::PhantomData;
+use core::ffi::c_void;
 
 use aws_c_iot_sys::{
-    aws_secure_tunnel, aws_secure_tunnel_acquire, aws_secure_tunnel_connection_start,
     aws_secure_tunnel_connection_view, aws_secure_tunnel_message_type,
-    aws_secure_tunnel_message_view, aws_secure_tunnel_new, aws_secure_tunnel_options,
-    aws_secure_tunnel_release, aws_secure_tunnel_send_message, aws_secure_tunnel_start,
-    aws_secure_tunnel_stop, aws_secure_tunnel_stream_start,
-    aws_secure_tunneling_on_termination_complete_fn, AWS_SECURE_TUNNELING_DESTINATION_MODE,
-    AWS_SECURE_TUNNELING_SOURCE_MODE,
+    aws_secure_tunnel_message_view, aws_secure_tunnel_options,
+    aws_secure_tunneling_on_termination_complete_fn,
 };
 
-use crate::{Allocator, AllocatorRef, ByteCursor, Error, Result};
+use crate::Error;
 
 pub trait Callbacks {
     fn message_received(&self, message: &MessageView);
@@ -51,7 +46,7 @@ impl UserData {
     fn into_ffi(self: Box<Self>) -> (aws_secure_tunneling_on_termination_complete_fn, *mut c_void) {
         extern "C" fn on_termination_complete(user_data: *mut c_void) {
             let user_data = unsafe { Box::from_raw(user_data.cast::<UserData>()) };
-            drop(user_data)
+            drop(user_data);
         }
 
         let user_data = Box::into_raw(self);

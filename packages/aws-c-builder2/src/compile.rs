@@ -36,9 +36,11 @@ fn build_files_dir(build: &mut cc::Build, path: &Path) {
         if !file_type.is_file() {
             continue;
         }
-        let file_name = item.file_name();
-        let name = file_name.to_str().unwrap();
-        if !name.ends_with(".c") {
+        let is_c_file = item
+            .path()
+            .extension()
+            .map_or(false, |ext| ext.eq_ignore_ascii_case("c"));
+        if !is_c_file {
             continue;
         }
         build.file(item.path());

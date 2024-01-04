@@ -7,12 +7,14 @@ use aws_c_io_sys::{
 pub struct SocketOptions(aws_socket_options);
 
 impl SocketOptions {
+    #[must_use]
     pub const fn builder() -> SocketOptionsBuilder {
         SocketOptionsBuilder::new()
     }
 
+    #[must_use]
     pub const fn as_ptr(&self) -> *mut aws_socket_options {
-        (&self.0 as *const aws_socket_options).cast_mut()
+        core::ptr::addr_of!(self.0).cast_mut()
     }
 }
 
@@ -21,6 +23,7 @@ pub struct SocketOptionsBuilder {
 }
 
 impl SocketOptionsBuilder {
+    #[must_use]
     pub const fn new() -> Self {
         Self {
             inner: aws_socket_options {

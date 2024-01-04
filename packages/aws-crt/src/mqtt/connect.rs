@@ -19,6 +19,7 @@ pub struct ConnectionOptionsBuilder<'a> {
 }
 
 impl ConnectionOptionsBuilder<'static> {
+    #[must_use]
     pub const fn new() -> Self {
         Self {
             options: aws_mqtt_connection_options {
@@ -137,7 +138,7 @@ impl Connection {
             session_present: bool,
             userdata: *mut c_void,
         ) {
-            let res = Error::check_rc(error_code).map(|_| ConnectionCompleteData {
+            let res = Error::check_rc(error_code).map(|()| ConnectionCompleteData {
                 return_code: ConnectReturnCode(return_code),
                 session_present,
             });

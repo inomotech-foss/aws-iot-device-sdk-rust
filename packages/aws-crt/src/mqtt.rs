@@ -39,6 +39,7 @@ impl Client {
         .map(Self)
     }
 
+    #[must_use]
     pub const fn as_ptr(&self) -> *mut aws_mqtt_client {
         self.0.as_ptr()
     }
@@ -63,6 +64,7 @@ impl Connection {
             .map(Self)
     }
 
+    #[must_use]
     pub const fn as_ptr(&self) -> *mut aws_mqtt_client_connection {
         self.0.as_ptr()
     }

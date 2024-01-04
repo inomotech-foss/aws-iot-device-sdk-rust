@@ -26,6 +26,7 @@ ref_counted_wrapper!(pub struct Inner(aws_client_bootstrap) {
 pub struct ClientBootstrap(Inner);
 
 impl ClientBootstrap {
+    #[must_use]
     pub const fn builder<'a>(
         el_group: &'a EventLoopGroup,
         host_resolver: &'a HostResolver,
@@ -38,6 +39,7 @@ impl ClientBootstrap {
             .map(Self)
     }
 
+    #[must_use]
     pub const fn as_ptr(&self) -> *mut aws_client_bootstrap {
         self.0.as_ptr()
     }
@@ -55,6 +57,7 @@ pub struct ClientBootstrapBuilder<'a> {
 }
 
 impl<'a> ClientBootstrapBuilder<'a> {
+    #[must_use]
     pub const fn new(el_group: &'a EventLoopGroup, host_resolver: &'a HostResolver) -> Self {
         Self {
             allocator: None,

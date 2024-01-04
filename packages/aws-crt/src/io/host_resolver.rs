@@ -17,7 +17,8 @@ ref_counted_wrapper!(struct Inner(aws_host_resolver) {
 pub struct HostResolver(Inner);
 
 impl HostResolver {
-    pub const fn builder<'a>(el_group: &'a EventLoopGroup) -> HostResolverBuilder<'a> {
+    #[must_use]
+    pub const fn builder(el_group: &EventLoopGroup) -> HostResolverBuilder<'_> {
         HostResolverBuilder::new(el_group)
     }
 
@@ -29,6 +30,7 @@ impl HostResolver {
             .map(Self)
     }
 
+    #[must_use]
     pub const fn as_ptr(&self) -> *mut aws_host_resolver {
         self.0.as_ptr()
     }
@@ -46,6 +48,7 @@ pub struct HostResolverBuilder<'a> {
 }
 
 impl<'a> HostResolverBuilder<'a> {
+    #[must_use]
     pub const fn new(el_group: &'a EventLoopGroup) -> Self {
         Self {
             allocator: None,

@@ -25,6 +25,7 @@ impl EventLoopGroup {
         .map(Self)
     }
 
+    #[must_use]
     pub const fn as_ptr(&self) -> *mut aws_event_loop_group {
         self.0.as_ptr()
     }
@@ -34,6 +35,7 @@ impl EventLoopGroup {
         todo!()
     }
 
+    #[must_use]
     pub fn get_loop_count(&self) -> usize {
         unsafe { aws_event_loop_group_get_loop_count(self.as_ptr()) }
     }

@@ -19,6 +19,7 @@ impl ApiHandle {
     /// # Safety
     ///
     /// Must only be called once.
+    #[must_use]
     pub unsafe fn new_unchecked_racy(allocator: AllocatorRef) -> Self {
         crate::logging::init_unchecked_racy(allocator);
         aws_mqtt_library_init(allocator.as_ptr());

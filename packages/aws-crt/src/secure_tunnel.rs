@@ -1,13 +1,11 @@
-use alloc::boxed::Box;
-use core::ffi::{c_void, CStr};
+use core::ffi::CStr;
 use core::marker::PhantomData;
 
 use aws_c_iot_sys::{
     aws_secure_tunnel, aws_secure_tunnel_acquire, aws_secure_tunnel_connection_start,
     aws_secure_tunnel_message_view, aws_secure_tunnel_new, aws_secure_tunnel_options,
     aws_secure_tunnel_release, aws_secure_tunnel_send_message, aws_secure_tunnel_start,
-    aws_secure_tunnel_stop, aws_secure_tunnel_stream_start,
-    aws_secure_tunneling_on_termination_complete_fn, AWS_SECURE_TUNNELING_DESTINATION_MODE,
+    aws_secure_tunnel_stop, aws_secure_tunnel_stream_start, AWS_SECURE_TUNNELING_DESTINATION_MODE,
     AWS_SECURE_TUNNELING_SOURCE_MODE,
 };
 
@@ -24,6 +22,7 @@ ref_counted_wrapper!(struct Inner(aws_secure_tunnel) {
 pub struct Tunnel(Inner);
 
 impl Tunnel {
+    #[must_use]
     pub const fn builder() -> Builder<'static> {
         Builder::new()
     }
@@ -55,14 +54,14 @@ impl Tunnel {
         Error::check_rc(unsafe { aws_secure_tunnel_send_message(self.0.as_ptr(), options) })
     }
 
-    /// Queue a STREAM_START message in a secure tunnel
+    /// Queue a `STREAM_START` message in a secure tunnel
     ///
     /// THIS API SHOULD ONLY BE USED FROM SOURCE MODE
     fn stream_start(&self, options: &aws_secure_tunnel_message_view) -> Result<()> {
         Error::check_rc(unsafe { aws_secure_tunnel_stream_start(self.0.as_ptr(), options) })
     }
 
-    /// Queue a CONNECTION_START message in a secure tunnel
+    /// Queue a `CONNECTION_START` message in a secure tunnel
     ///
     /// THIS API SHOULD ONLY BE USED FROM SOURCE MODE
     fn connection_start(&self, options: &aws_secure_tunnel_message_view) -> Result<()> {
@@ -77,6 +76,7 @@ pub struct Builder<'a> {
 }
 
 impl Builder<'static> {
+    #[must_use]
     pub const fn new() -> Self {
         Self {
             allocator: None,

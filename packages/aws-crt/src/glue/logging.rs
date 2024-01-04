@@ -11,7 +11,7 @@ use crate::{AllocatorRef, AwsString};
 pub fn create_logger(allocator: AllocatorRef) -> aws_logger {
     static VTABLE: aws_logger_vtable = create_vtable();
     aws_logger {
-        vtable: (&VTABLE as *const aws_logger_vtable).cast_mut(),
+        vtable: core::ptr::addr_of!(VTABLE).cast_mut(),
         allocator: allocator.as_ptr(),
         p_impl: core::ptr::null_mut(),
     }
@@ -80,7 +80,7 @@ extern "C" fn arglu_log(
 }
 
 const fn aws_level_to_log(level: aws_log_level) -> log::Level {
-    use log::Level::*;
+    use log::Level::{Debug, Error, Info, Trace, Warn};
     match level {
         AWS_LL_FATAL | AWS_LL_ERROR => Error,
         AWS_LL_WARN => Warn,
@@ -92,7 +92,7 @@ const fn aws_level_to_log(level: aws_log_level) -> log::Level {
 }
 
 const fn log_level_filter_to_aws(level: log::LevelFilter) -> aws_log_level {
-    use log::LevelFilter::*;
+    use log::LevelFilter::{Debug, Error, Info, Off, Trace, Warn};
     match level {
         Off => AWS_LL_FATAL,
         Error => AWS_LL_ERROR,

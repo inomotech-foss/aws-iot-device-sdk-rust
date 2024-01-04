@@ -41,21 +41,25 @@ impl Error {
     }
 
     #[inline]
+    #[must_use]
     pub const fn is_success(self) -> bool {
         matches!(self.0 as _, AWS_ERROR_SUCCESS)
     }
 
     #[inline]
+    #[must_use]
     pub fn message(self) -> &'static CStr {
         unsafe { CStr::from_ptr(aws_error_str(self.0)) }
     }
 
     #[inline]
+    #[must_use]
     pub fn name(self) -> &'static CStr {
         unsafe { CStr::from_ptr(aws_error_name(self.0)) }
     }
 
     #[inline]
+    #[must_use]
     pub fn lib_name(self) -> &'static CStr {
         unsafe { CStr::from_ptr(aws_error_lib_name(self.0)) }
     }

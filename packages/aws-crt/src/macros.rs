@@ -16,6 +16,7 @@ macro_rules! ref_counted_wrapper {
             }
 
             #[inline]
+            #[must_use]
             pub const fn as_ptr(&self) -> *mut $inner_ty {
                 self.0.as_ptr()
             }
