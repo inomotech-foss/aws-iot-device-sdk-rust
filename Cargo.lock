@@ -132,7 +132,8 @@ name = "aws-c-s3-sys"
 version = "0.1.0+v0.4.9"
 dependencies = [
  "aws-c-auth-sys",
- "aws-c-builder",
+ "aws-c-builder2",
+ "aws-c-cal-sys",
  "aws-c-common-sys",
  "aws-c-http-sys",
  "aws-c-io-sys",
