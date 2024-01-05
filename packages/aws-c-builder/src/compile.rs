@@ -1,8 +1,9 @@
-use std::path::{Path, PathBuf};
+use std::borrow::Cow;
+use std::path::Path;
 
 use crate::Builder;
 
-pub fn run(builder: &mut Builder, include_dirs: &[PathBuf]) {
+pub fn run(builder: &mut Builder, include_dirs: &[Cow<Path>]) {
     println!(
         "cargo:rerun-if-changed={}",
         builder.lib_dir.to_str().unwrap()

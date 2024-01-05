@@ -1,12 +1,11 @@
 fn main() {
-    let root_paths = aws_c_builder_cmake::get_dependency_root_paths(["AWS_C_COMMON"]);
-    let dependency_includes = root_paths.into_iter().map(|path| format!("{path}/include"));
+    let common_include = std::env::var_os("DEP_AWS_C_COMMON_INCLUDE").unwrap();
 
     println!("cargo:rerun-if-changed=src/glue/logging.c");
     cc::Build::new()
         .warnings(true)
         .extra_warnings(true)
-        .includes(dependency_includes)
+        .include(common_include)
         .file("src/glue/logging.c")
         .compile("glue");
 }

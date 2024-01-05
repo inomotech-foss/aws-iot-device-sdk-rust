@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::path::{Path, PathBuf};
 
 pub use cc;
@@ -9,6 +10,7 @@ pub struct Builder<'a> {
     lib_dir: PathBuf,
     dependencies: Vec<&'a str>,
     source_subdirs: Vec<&'a str>,
+    extra_include_dirs: Vec<Cow<'a, Path>>,
     cc_callbacks: Vec<Box<dyn FnMut(&mut cc::Build) + 'a>>,
     bindings_suffix: &'a str,
 }
@@ -20,6 +22,7 @@ impl<'a> Builder<'a> {
             lib_dir,
             dependencies: Vec::new(),
             source_subdirs: Vec::new(),
+            extra_include_dirs: Vec::new(),
             cc_callbacks: Vec::new(),
             bindings_suffix: "",
         }
@@ -45,6 +48,17 @@ impl<'a> Builder<'a> {
         self
     }
 
+    pub fn include_dirs(&mut self, iter: impl IntoIterator<Item = &'a Path>) -> &mut Self {
+        self.extra_include_dirs
+            .extend(iter.into_iter().map(Cow::from));
+        self
+    }
+
+    pub fn include_dir(&mut self, value: &'a Path) -> &mut Self {
+        self.extra_include_dirs.push(Cow::from(value));
+        self
+    }
+
     pub fn cc_callback(&mut self, cb: impl FnMut(&mut cc::Build) + 'a) -> &mut Self {
         self.cc_callbacks.push(Box::new(cb));
         self
@@ -67,6 +81,8 @@ impl<'a> Builder<'a> {
                     .iter()
                     .map(|name| get_dep_include_path(name)),
             )
+            .map(Cow::from)
+            .chain(self.extra_include_dirs.iter().cloned())
             .collect::<Vec<_>>();
 
         self::compile::run(self, &include_dirs);
