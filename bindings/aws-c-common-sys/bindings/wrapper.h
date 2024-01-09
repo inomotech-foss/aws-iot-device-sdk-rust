@@ -48,8 +48,8 @@
 #include <aws/common/system_info.h>
 #include <aws/common/system_resource_util.h>
 #include <aws/common/task_scheduler.h>
-#include <aws/common/thread_scheduler.h>
 #include <aws/common/thread.h>
+#include <aws/common/thread_scheduler.h>
 #include <aws/common/time.h>
 #include <aws/common/uri.h>
 #include <aws/common/uuid.h>

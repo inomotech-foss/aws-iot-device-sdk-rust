@@ -5,14 +5,14 @@ fn main() {
     let mut builder = aws_c_builder::Builder::new("aws-c-io");
     if config.use_s2n {
         builder.dependency("S2N_TLS");
-        builder.source_subdir("s2n");
+        builder.source_path("s2n");
         builder.cc_callback(|build| {
             build.define("USE_S2N", None);
         });
     }
 
     builder
-        .source_subdirs(config.source_dirs.iter().copied())
+        .source_paths(config.source_dirs.iter().copied())
         .cc_callback(|build| config.event_loop.set_as_define(build))
         .dependencies(["AWS_C_CAL", "AWS_C_COMMON"])
         .bindings_suffix(config.bindings.suffix())

@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, simon/aws-crt]
   pull_request:
     branches: [main]
 

@@ -60,8 +60,9 @@ dependencies = [
 name = "aws-c-common-sys"
 version = "0.1.0+v0.9.12"
 dependencies = [
- "aws-c-builder-cmake",
+ "aws-c-builder",
  "core-foundation-sys",
+ "ittapi-sys",
  "libc",
 ]
 
@@ -162,7 +163,6 @@ name = "aws-crt"
 version = "0.1.0"
 dependencies = [
  "aws-c-auth-sys",
- "aws-c-builder-cmake",
  "aws-c-cal-sys",
  "aws-c-common-sys",
  "aws-c-compression-sys",
@@ -462,6 +462,15 @@ dependencies = [
  "hermit-abi",
  "rustix",
  "windows-sys 0.52.0",
+]
+
+[[package]]
+name = "ittapi-sys"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "52f5385394064fa2c886205dba02598013ce83d3e92d33dbdc0c52fe0e7bf4fc"
+dependencies = [
+ "cc",
 ]
 
 [[package]]

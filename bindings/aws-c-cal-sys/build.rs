@@ -5,14 +5,14 @@ fn main() {
     let mut builder = aws_c_builder::Builder::new("aws-c-cal");
     match target {
         Target::Darwin => {
-            builder.source_subdir("darwin");
+            builder.source_path("darwin");
         }
         Target::Unix => {
             builder.dependency("AWS_LC_0_12_1");
-            builder.source_subdir("unix");
+            builder.source_path("unix");
         }
         Target::Windows => {
-            builder.source_subdir("windows");
+            builder.source_path("windows");
         }
     }
 

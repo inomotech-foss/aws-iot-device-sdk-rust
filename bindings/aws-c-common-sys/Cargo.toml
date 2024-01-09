@@ -9,14 +9,18 @@ publish.workspace = true
 repository.workspace = true
 rust-version.workspace = true
 
+[features]
+enable-tracing = ["dep:ittapi-sys"]
+
 [package.metadata.aws-c-builder]
 enable = true
 
 [dependencies]
+ittapi-sys = { workspace = true, optional = true }
 libc.workspace = true
 
 [target.'cfg(target_vendor = "apple")'.dependencies]
 core-foundation-sys.workspace = true
 
 [build-dependencies]
-aws-c-builder-cmake.workspace = true
+aws-c-builder.workspace = true

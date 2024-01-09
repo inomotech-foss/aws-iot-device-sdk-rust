@@ -3,7 +3,7 @@ use std::path::Path;
 
 use crate::Builder;
 
-pub fn run(builder: &mut Builder, include_dirs: &[Cow<Path>]) {
+pub fn run(builder: &mut Builder, include_dirs: &[Cow<Path>], enable_tracing: bool) {
     println!(
         "cargo:rerun-if-changed={}",
         builder.lib_dir.to_str().unwrap()
@@ -13,14 +13,17 @@ pub fn run(builder: &mut Builder, include_dirs: &[Cow<Path>]) {
     let mut build = cc::Build::new();
     build
         .warnings(true)
-        .extra_warnings(true)
-        .includes(include_dirs)
-        .define("INTEL_NO_ITTNOTIFY_API", None);
+        .extra_warnings(false)
+        .includes(include_dirs);
+
+    if !enable_tracing {
+        build.define("INTEL_NO_ITTNOTIFY_API", None);
+    }
 
     let source_dir = builder.lib_dir.join("source");
-    build_files_dir(&mut build, &source_dir);
-    for subdir in &builder.source_subdirs {
-        build_files_dir(&mut build, &source_dir.join(subdir));
+    build_add_source(&mut build, &source_dir);
+    for path in &builder.source_paths {
+        build_add_source(&mut build, &source_dir.join(path));
     }
 
     for cb in &mut builder.cc_callbacks {
@@ -30,7 +33,12 @@ pub fn run(builder: &mut Builder, include_dirs: &[Cow<Path>]) {
     build.compile(lib_name);
 }
 
-fn build_files_dir(build: &mut cc::Build, path: &Path) {
+fn build_add_source(build: &mut cc::Build, path: &Path) {
+    if path.is_file() {
+        build.file(path);
+        return;
+    }
+
     for item in path.read_dir().expect("read dir") {
         let item = item.unwrap();
         let file_type = item.file_type().unwrap();
