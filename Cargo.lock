@@ -34,7 +34,7 @@ name = "aws-c-builder"
 version = "0.1.0"
 dependencies = [
  "bindgen 0.69.1",
- "cc",
+ "cc 1.0.84",
 ]
 
 [[package]]
@@ -165,7 +165,7 @@ dependencies = [
  "aws-c-mqtt-sys",
  "aws-c-s3-sys",
  "aws-c-sdkutils-sys",
- "cc",
+ "cc 1.0.84",
  "env_logger",
  "futures",
  "log",
@@ -248,6 +248,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "cc"
+version = "1.0.84"
+source = "git+https://github.com/roblabla/cc-rs?branch=compile-intermediates#1316b84e8e247c891b45368df0435218ad11941d"
+dependencies = [
+ "libc",
+]
+
+[[package]]
 name = "cexpr"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -279,7 +287,7 @@ version = "0.1.50"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a31c789563b815f77f4250caee12365734369f942439b7defd71e18a48197130"
 dependencies = [
- "cc",
+ "cc 1.0.83",
 ]
 
 [[package]]
@@ -462,7 +470,7 @@ version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "52f5385394064fa2c886205dba02598013ce83d3e92d33dbdc0c52fe0e7bf4fc"
 dependencies = [
- "cc",
+ "cc 1.0.83",
 ]
 
 [[package]]
@@ -649,7 +657,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc0a58c20d508ae59b1c5bd56b88e334960edc899608e52adb2cb83b4c3bfb32"
 dependencies = [
  "aws-lc-sys",
- "cc",
+ "cc 1.0.83",
  "libc",
 ]
 

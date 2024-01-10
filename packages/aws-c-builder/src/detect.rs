@@ -2,7 +2,11 @@ use std::path::Path;
 
 // TODO NO_STDBOOL and NO_STDINT
 
-pub mod thread;
+mod cflags;
+mod feature_tests;
+mod simd;
+mod thread_affinity;
+mod thread_name;
 
 pub fn have_winapi_desktop(out_dir: &Path, target_family: &str) -> bool {
     if target_family != "windows" {
@@ -99,7 +103,7 @@ pub fn check_compiles(out_dir: &Path, code: &str) -> bool {
         .extra_warnings(false)
         .opt_level(0)
         .file(c_file)
-        .try_compile("compile_test")
+        .try_compile_intermediates()
         .is_ok()
 }
 

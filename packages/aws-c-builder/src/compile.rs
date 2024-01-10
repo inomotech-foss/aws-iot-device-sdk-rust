@@ -14,6 +14,7 @@ pub fn run(builder: &mut Builder, include_dirs: &[Cow<Path>], enable_tracing: bo
     build
         .warnings(true)
         .extra_warnings(false)
+        .std("c99")
         .includes(include_dirs);
 
     if !enable_tracing {

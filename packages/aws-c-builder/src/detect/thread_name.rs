@@ -1,65 +1,14 @@
 use std::path::Path;
 
-use super::{check_compiles, check_symbol_exists};
-
-#[derive(Clone, Copy, Debug, Default)]
-pub enum AffinityMethod {
-    #[default]
-    None,
-    PthreadAttr,
-    Pthread,
-}
-
-impl AffinityMethod {
-    pub fn detect(out_dir: &Path, target_family: &str, target_os: &str) -> Self {
-        // Non-POSIX, Android, and Apple platforms do not support thread affinity.
-        if target_family != "unix" {
-            return Self::None;
-        }
-
-        // BSDs put nonportable pthread declarations in a separate header.
-        let headers = if target_os.ends_with("bsd") {
-            ["pthread.h", "pthread_np.h"].as_slice()
-        } else {
-            ["pthread.h"].as_slice()
-        };
-
-        // Using pthread attrs is the preferred method, but is glibc-specific.
-        if check_symbol_exists(out_dir, headers, "pthread_attr_setaffinity_np") {
-            return Self::PthreadAttr;
-        }
-
-        // This method is still nonportable, but is supported by musl and BSDs.
-        if check_symbol_exists(out_dir, headers, "pthread_setaffinity_np") {
-            return Self::Pthread;
-        }
-
-        // If we got here, we expected thread affinity support but didn't find it.
-        // We still build with degraded NUMA performance, but show a warning.
-        println!("cargo:warning=No supported method for setting thread affinity");
-        Self::None
-    }
-
-    pub fn apply(self, build: &mut cc::Build) {
-        build.define("AWS_AFFINITY_METHOD", self.define_value());
-    }
-
-    pub const fn define_value(self) -> &'static str {
-        match self {
-            Self::None => "AWS_AFFINITY_METHOD_NONE",
-            Self::PthreadAttr => "AWS_AFFINITY_METHOD_PTHREAD_ATTR",
-            Self::Pthread => "AWS_AFFINITY_METHOD_PTHREAD",
-        }
-    }
-}
+use super::check_compiles;
 
 #[derive(Debug)]
-pub struct NameMethod {
+pub struct ThreadNameMethod {
     setter: Option<NameSetter>,
     getter: Option<NameGetter>,
 }
 
-impl NameMethod {
+impl ThreadNameMethod {
     pub fn detect(out_dir: &Path, target_family: &str, target_vendor: &str) -> Self {
         if target_family == "windows" {
             // On Windows we do a runtime check for both getter and setter, instead of
@@ -122,15 +71,18 @@ impl NameSetter {
         }
 
         // pthread_setname_np() usually takes 2 args
-        if NameMethod::check_compiles(out_dir, r#"pthread_setname_np(thread_id, "asdf");"#) {
+        if ThreadNameMethod::check_compiles(out_dir, r#"pthread_setname_np(thread_id, "asdf");"#) {
             return Some(Self::Setname2);
         }
         // OpenBSD's function takes 2 args, but has a different name.
-        if NameMethod::check_compiles(out_dir, r#"pthread_set_name_np(thread_id, "asdf");"#) {
+        if ThreadNameMethod::check_compiles(out_dir, r#"pthread_set_name_np(thread_id, "asdf");"#) {
             return Some(Self::SetName2);
         }
         // But on NetBSD it takes 3!
-        if NameMethod::check_compiles(out_dir, r#"pthread_setname_np(thread_id, "asdf", NULL);"#) {
+        if ThreadNameMethod::check_compiles(
+            out_dir,
+            r#"pthread_setname_np(thread_id, "asdf", NULL);"#,
+        ) {
             return Some(Self::Setname3);
         }
 
@@ -164,21 +116,21 @@ impl NameGetter {
         }
 
         // Some platforms have 2 arg version
-        if NameMethod::check_compiles(
+        if ThreadNameMethod::check_compiles(
             out_dir,
             r#"char name[16] = {0}; pthread_getname_np(thread_id, name);"#,
         ) {
             return Some(Self::Getname2);
         }
         // Some platforms have 2 arg version but with a different name (eg, OpenBSD)
-        if NameMethod::check_compiles(
+        if ThreadNameMethod::check_compiles(
             out_dir,
             r#"char name[16] = {0}; pthread_get_name_np(thread_id, name);"#,
         ) {
             return Some(Self::GetName2);
         }
         // But majority have 3
-        if NameMethod::check_compiles(
+        if ThreadNameMethod::check_compiles(
             out_dir,
             r#"char name[16] = {0}; pthread_getname_np(thread_id, name, 16);"#,
         ) {

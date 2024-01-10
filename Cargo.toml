@@ -34,7 +34,10 @@ aws-crt = { path = "packages/aws-crt" }
 
 aws-lc-sys = "0.12"
 bindgen = "0.69"
-cc = { version = "1", features = ["parallel"] }
+# SEE: https://github.com/rust-lang/cc-rs/pull/914
+cc = { git = "https://github.com/roblabla/cc-rs", branch = "compile-intermediates", features = [
+    "parallel",
+] }
 core-foundation-sys = "0.8"
 env_logger = "0.10"
 futures = "0.3"
