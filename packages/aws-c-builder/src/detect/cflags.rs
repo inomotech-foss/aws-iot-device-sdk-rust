@@ -1,3 +1,8 @@
+use std::path::Path;
+
+use super::Profile;
+
+/// Implementation of the `aws_set_common_properties` CMake function.
 #[derive(Debug)]
 pub struct CommonProperties {
     has_stdint: bool,
@@ -7,7 +12,27 @@ pub struct CommonProperties {
 }
 
 impl CommonProperties {
-    pub fn apply(&self, build: &mut cc::Build) {
+    pub fn detect(out_dir: &Path, compiler: &cc::Tool) -> Self {
+        let has_stdint = super::check_include_file(out_dir, "stdint.h");
+        let has_stdbool = super::check_include_file(out_dir, "stdbool.h");
+        // some platforms (especially when cross-compiling) do not have the sysconf API
+        // in their toolchain files.
+        let have_sysconf = super::check_compiles(
+            out_dir,
+            r#"
+#include <unistd.h>
+int main() { sysconf(_SC_NPROCESSORS_ONLN); }
+"#,
+        );
+        Self {
+            has_stdint,
+            has_stdbool,
+            have_sysconf,
+            compiler_specific: CompilerSpecific::detect(out_dir, compiler),
+        }
+    }
+
+    pub fn apply(&self, build: &mut cc::Build, profile: Profile, enable_tracing: bool) {
         if !self.has_stdint {
             build.define("NO_STDINT", None);
         }
@@ -17,8 +42,12 @@ impl CommonProperties {
         if self.have_sysconf {
             build.define("HAVE_SYSCONF", None);
         }
-        // TODO: set debug_build
-        // TODO: set enable_tracing
+        if matches!(profile, Profile::Debug) {
+            build.define("DEBUG_BUILD", None);
+        }
+        if !enable_tracing {
+            build.define("INTEL_NO_ITTNOTIFY_API", None);
+        }
         build.std("c99");
     }
 
@@ -40,6 +69,28 @@ enum CompilerSpecific {
 }
 
 impl CompilerSpecific {
+    fn detect(out_dir: &Path, compiler: &cc::Tool) -> Self {
+        if compiler.is_like_msvc() {
+            Self::Msvc
+        } else {
+            let outline_atomics = super::check_compiles_with_cc(
+                out_dir,
+                cc::Build::new().flag("-moutline-atomics").flag("-Werror"),
+                r#"
+int main() {
+    int x = 1;
+    __atomic_fetch_add(&x, -1, __ATOMIC_SEQ_CST);
+    return x;
+}
+"#,
+            );
+            Self::Gnu {
+                outline_atomics,
+                posix_lfs: PosixLfs::detect(out_dir),
+            }
+        }
+    }
+
     fn apply(&self, build: &mut cc::Build) {
         match self {
             Self::Msvc => {
@@ -49,6 +100,7 @@ impl CompilerSpecific {
                 outline_atomics,
                 posix_lfs,
             } => {
+                // TODO: cache flag_if_supported
                 build.flag("-Wstrict-prototypes").flag_if_supported("-fPIC");
                 if *outline_atomics {
                     build.flag("-moutline-atomics");
@@ -66,8 +118,42 @@ struct PosixLfs {
 }
 
 impl PosixLfs {
+    fn detect(out_dir: &Path) -> Self {
+        const CODE: &str = r#"
+#include <stdio.h>
+/* fails to compile if off_t smaller than 64bits */
+typedef char array[sizeof(off_t) >= 8 ? 1 : -1];
+int main() { return 0; }
+"#;
+
+        let mut supported;
+        let mut via_define = false;
+        if super::check_compiles(out_dir, CODE) {
+            supported = true;
+        } else if super::check_compiles_with_cc(
+            out_dir,
+            &mut cc::Build::new().define("_FILE_OFFSET_BITS", "64"),
+            CODE,
+        ) {
+            supported = true;
+            via_define = true;
+        } else {
+            supported = false;
+        }
+
+        if supported {
+            // sometimes off_t is 64bit, but fseeko() is missing (ex: Android API < 24)
+            supported = super::check_symbol_exists(out_dir, ["stdio.h"], "fseeko");
+        }
+
+        Self {
+            supported,
+            via_define,
+        }
+    }
+
     fn apply(&self, build: &mut cc::Build) {
-        if self.via_define {
+        if self.supported && self.via_define {
             build.define("_FILE_OFFSET_BITS", "64");
         }
     }

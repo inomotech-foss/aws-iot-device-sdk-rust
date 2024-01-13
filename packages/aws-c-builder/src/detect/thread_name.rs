@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use super::check_compiles;
+use super::{TargetFamily, TargetVendor};
 
 #[derive(Debug)]
 pub struct ThreadNameMethod {
@@ -9,8 +9,12 @@ pub struct ThreadNameMethod {
 }
 
 impl ThreadNameMethod {
-    pub fn detect(out_dir: &Path, target_family: &str, target_vendor: &str) -> Self {
-        if target_family == "windows" {
+    pub fn detect(
+        out_dir: &Path,
+        target_family: TargetFamily,
+        target_vendor: TargetVendor,
+    ) -> Self {
+        if matches!(target_family, TargetFamily::Windows) {
             // On Windows we do a runtime check for both getter and setter, instead of
             // compile-time check
             return Self {
@@ -50,7 +54,7 @@ int main() {{
 }}
 "#
         );
-        check_compiles(out_dir, &code)
+        super::check_compiles(out_dir, &code)
     }
 }
 
@@ -62,8 +66,8 @@ enum NameSetter {
 }
 
 impl NameSetter {
-    fn detect(out_dir: &Path, target_vendor: &str) -> Option<Self> {
-        if target_vendor == "apple" {
+    fn detect(out_dir: &Path, target_vendor: TargetVendor) -> Option<Self> {
+        if matches!(target_vendor, TargetVendor::Apple) {
             // All Apple platforms we support have 1 arg version of the function.
             // So skip compile time check here and instead check if its apple in
             // the thread code.
@@ -108,8 +112,8 @@ enum NameGetter {
 }
 
 impl NameGetter {
-    fn detect(out_dir: &Path, target_vendor: &str) -> Option<Self> {
-        if target_vendor == "apple" {
+    fn detect(out_dir: &Path, target_vendor: TargetVendor) -> Option<Self> {
+        if matches!(target_vendor, TargetVendor::Apple) {
             // All Apple platforms we support have the same function, so no need for
             // compile-time check.
             return Some(Self::Getname3);

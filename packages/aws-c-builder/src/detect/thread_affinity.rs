@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use super::check_symbol_exists;
+use super::{TargetFamily, TargetOs};
 
 #[derive(Clone, Copy, Debug, Default)]
 pub enum ThreadAffinityMethod {
@@ -11,26 +11,26 @@ pub enum ThreadAffinityMethod {
 }
 
 impl ThreadAffinityMethod {
-    pub fn detect(out_dir: &Path, target_family: &str, target_os: &str) -> Self {
+    pub fn detect(out_dir: &Path, target_family: TargetFamily, target_os: TargetOs) -> Self {
         // Non-POSIX, Android, and Apple platforms do not support thread affinity.
-        if target_family != "unix" {
+        if !matches!(target_family, TargetFamily::Unix) {
             return Self::None;
         }
 
         // BSDs put nonportable pthread declarations in a separate header.
-        let headers = if target_os.ends_with("bsd") {
+        let headers = if target_os.is_bsd() {
             ["pthread.h", "pthread_np.h"].as_slice()
         } else {
             ["pthread.h"].as_slice()
         };
 
         // Using pthread attrs is the preferred method, but is glibc-specific.
-        if check_symbol_exists(out_dir, headers, "pthread_attr_setaffinity_np") {
+        if super::check_symbol_exists(out_dir, headers, "pthread_attr_setaffinity_np") {
             return Self::PthreadAttr;
         }
 
         // This method is still nonportable, but is supported by musl and BSDs.
-        if check_symbol_exists(out_dir, headers, "pthread_setaffinity_np") {
+        if super::check_symbol_exists(out_dir, headers, "pthread_setaffinity_np") {
             return Self::Pthread;
         }
 
@@ -44,7 +44,7 @@ impl ThreadAffinityMethod {
         build.define("AWS_AFFINITY_METHOD", self.define_value());
     }
 
-    pub const fn define_value(self) -> &'static str {
+    const fn define_value(self) -> &'static str {
         match self {
             Self::None => "AWS_AFFINITY_METHOD_NONE",
             Self::PthreadAttr => "AWS_AFFINITY_METHOD_PTHREAD_ATTR",

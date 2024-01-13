@@ -1,102 +1,27 @@
 use std::path::Path;
 
-// TODO NO_STDBOOL and NO_STDINT
-
 mod cflags;
 mod feature_tests;
 mod simd;
 mod thread_affinity;
 mod thread_name;
 
-pub fn have_winapi_desktop(out_dir: &Path, target_family: &str) -> bool {
-    if target_family != "windows" {
-        return false;
-    }
-    check_compiles(
-        out_dir,
-        r#"
-#include <Windows.h>
-#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
-int main() { return 0; }
-#else
-it's not windows desktop
-#endif
-"#,
-    )
-}
-
-pub fn have_gcc_inline_asm(out_dir: &Path) -> bool {
-    check_compiles(
-        out_dir,
-        r#"
-int main() {
-    int foo = 42, bar = 24;
-    __asm__ __volatile__("":"=r"(foo):"r"(bar):"memory");
-}
-"#,
-    )
-}
-
-pub fn have_execinfo(out_dir: &Path) -> bool {
-    check_compiles(
-        out_dir,
-        r#"
-#include <execinfo.h>
-#include <stdlib.h>
-int main() {
-    backtrace(NULL, 0);
-    return 0;
-}
-"#,
-    )
-}
-
-pub fn have_linux_if_link_h(out_dir: &Path) -> bool {
-    check_compiles(
-        out_dir,
-        r#"
-#include <linux/if_link.h>
-int main() { return 1; }
-"#,
-    )
-}
-
-// TODO: there's a way to force posix lfs using a define, but that requires
-// setting a define as part of the compilation so we need to do that higher up.
-// See the AWS impl for reference.
-pub fn have_posix_lfs(out_dir: &Path) -> bool {
-    check_compiles(
-        out_dir,
-        r#"
-#include <stdio.h>
-
-/* fails to compile if off_t smaller than 64bits */
-typedef char array[sizeof(off_t) >= 8 ? 1 : -1];
-
-int main() { return 0; }
-"#,
-    )
-}
-
-pub fn have_sysconf(out_dir: &Path) -> bool {
-    check_compiles(
-        out_dir,
-        r#"
-#include <unistd.h>
-int main() { sysconf(_SC_NPROCESSORS_ONLN); }
-"#,
-    )
-}
-
 /// Checks whether the given code snippet successfully compiles.
 ///
 /// Must not be called in parallel.
 pub fn check_compiles(out_dir: &Path, code: &str) -> bool {
+    check_compiles_with_cc(out_dir, &mut cc::Build::new(), code)
+}
+
+/// Checks whether the given code snippet successfully compiles with a
+/// pre-configured [`cc::Build`].
+///
+/// Must not be called in parallel.
+pub fn check_compiles_with_cc(out_dir: &Path, build: &mut cc::Build, code: &str) -> bool {
     let c_file = out_dir.join("compile_test.c");
     std::fs::write(&c_file, code).expect("write c code compilation test code");
-
     // TODO: this is too noisy
-    cc::Build::new()
+    build
         .cargo_metadata(false)
         .emit_rerun_if_env_changed(false)
         .warnings(false)
@@ -137,4 +62,99 @@ int main(int argc, char** argv) {{
     )
     .unwrap();
     check_compiles(out_dir, &code)
+}
+
+/// Checks whether a given header is available during compilation.
+///
+/// See: <https://github.com/Kitware/CMake/blob/master/Modules/CheckIncludeFile.cmake>
+pub fn check_include_file(out_dir: &Path, name: &str) -> bool {
+    let code = format!(
+        r#"
+#include <{name}>
+int main(void) {{ return 0; }}
+"#
+    );
+    check_compiles(out_dir, &code)
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Profile {
+    Debug,
+    Release,
+}
+
+impl Profile {
+    pub fn from_env() -> Self {
+        match std::env::var("PROFILE").as_deref() {
+            Ok("debug") => Self::Debug,
+            _ => Self::Release,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TargetFamily {
+    Other,
+    Unix,
+    Windows,
+}
+
+impl TargetFamily {
+    pub fn from_env() -> Self {
+        match std::env::var("CARGO_CFG_TARGET_FAMILY").as_deref() {
+            Ok("unix") => Self::Unix,
+            Ok("windows") => Self::Windows,
+            _ => Self::Other,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TargetOs {
+    Other,
+    Windows,
+    Macos,
+    Ios,
+    Linux,
+    Android,
+    Freebsd,
+    Dragonfly,
+    Openbsd,
+    Netbsd,
+}
+
+impl TargetOs {
+    pub fn from_env() -> Self {
+        match std::env::var("CARGO_CFG_TARGET_OS").as_deref() {
+            Ok("windows") => Self::Windows,
+            Ok("macos") => Self::Macos,
+            Ok("ios") => Self::Ios,
+            Ok("linux") => Self::Linux,
+            Ok("android") => Self::Android,
+            Ok("freebsd") => Self::Freebsd,
+            Ok("dragonfly") => Self::Dragonfly,
+            Ok("openbsd") => Self::Openbsd,
+            Ok("netbsd") => Self::Netbsd,
+            _ => Self::Other,
+        }
+    }
+
+    pub const fn is_bsd(self) -> bool {
+        matches!(self, Self::Freebsd | Self::Openbsd | Self::Netbsd)
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TargetVendor {
+    Other,
+    Apple,
+}
+
+impl TargetVendor {
+    pub fn from_env() -> Self {
+        match std::env::var("CARGO_CFG_TARGET_VENDOR").as_deref() {
+            Ok("apple") => Self::Apple,
+            _ => Self::Other,
+        }
+    }
 }
