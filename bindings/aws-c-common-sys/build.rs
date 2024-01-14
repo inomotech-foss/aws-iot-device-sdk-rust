@@ -67,7 +67,10 @@ fn main() {
     builder.simd_add_definitions();
     if ctx.have_avx2_intrinsics() {
         builder.define("USE_SIMD_ENCODING", None);
-        builder.simd_add_source_avx2("arch/intel/encoding_avx2.c");
+        builder
+            .source_with_properties()
+            .source_path("arch/intel/encoding_avx2.c")
+            .simd_avx2();
     }
 
     builder.build();

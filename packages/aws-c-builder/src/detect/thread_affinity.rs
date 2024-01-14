@@ -1,6 +1,5 @@
-use std::path::Path;
-
-use super::{TargetFamily, TargetOs};
+use super::TargetFamily;
+use crate::Context;
 
 #[derive(Clone, Copy, Debug, Default)]
 pub enum ThreadAffinityMethod {
@@ -11,27 +10,27 @@ pub enum ThreadAffinityMethod {
 }
 
 impl ThreadAffinityMethod {
-    pub fn detect(out_dir: &Path, target_family: TargetFamily, target_os: TargetOs) -> Self {
+    pub fn detect(ctx: &Context) -> Self {
         eprintln!("detecting thread affinity method");
         // Non-POSIX, Android, and Apple platforms do not support thread affinity.
-        if !matches!(target_family, TargetFamily::Unix) {
+        if !matches!(ctx.target_family, TargetFamily::Unix) {
             return Self::None;
         }
 
         // BSDs put nonportable pthread declarations in a separate header.
-        let headers = if target_os.is_bsd() {
+        let headers = if ctx.target_os.is_bsd() {
             ["pthread.h", "pthread_np.h"].as_slice()
         } else {
             ["pthread.h"].as_slice()
         };
 
         // Using pthread attrs is the preferred method, but is glibc-specific.
-        if super::check_symbol_exists(out_dir, headers, "pthread_attr_setaffinity_np") {
+        if super::check_symbol_exists(ctx, headers, "pthread_attr_setaffinity_np") {
             return Self::PthreadAttr;
         }
 
         // This method is still nonportable, but is supported by musl and BSDs.
-        if super::check_symbol_exists(out_dir, headers, "pthread_setaffinity_np") {
+        if super::check_symbol_exists(ctx, headers, "pthread_setaffinity_np") {
             return Self::Pthread;
         }
 

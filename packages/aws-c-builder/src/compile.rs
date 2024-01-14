@@ -1,7 +1,7 @@
 use std::borrow::Cow;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
-use crate::Builder;
+use crate::{Builder, Context, SourceWithProperties};
 
 pub fn run(builder: &mut Builder, include_dirs: &[Cow<Path>], enable_tracing: bool) {
     println!(
@@ -34,28 +34,47 @@ pub fn run(builder: &mut Builder, include_dirs: &[Cow<Path>], enable_tracing: bo
 
     let source_root_dir = builder.lib_dir.join("source");
 
-    let avx2_objects = if builder.source_paths_avx2.is_empty() {
-        Vec::new()
-    } else {
-        eprintln!("compiling avx2 objects");
+    let mut prepared_objects = Vec::new();
+
+    for src in &builder.sources_with_properties {
         let mut build = build.clone();
-        for path in &builder.source_paths_avx2 {
-            build_add_source(&mut build, &source_root_dir.join(path));
-        }
-        build.compile_intermediates()
-    };
+        prepared_objects.extend(compile_source_with_properties(
+            builder.ctx,
+            &mut build,
+            &source_root_dir,
+            src,
+        ));
+    }
 
     build_add_source(&mut build, &source_root_dir);
     for path in &builder.source_paths {
         build_add_source(&mut build, &source_root_dir.join(path));
     }
-    for obj in avx2_objects {
+    for obj in prepared_objects {
         build.object(obj);
     }
 
     eprintln!("starting compilation");
     eprintln!("{builder:#?}");
     build.compile(lib_name);
+}
+
+fn compile_source_with_properties(
+    ctx: &Context,
+    build: &mut cc::Build,
+    source_root_dir: &Path,
+    src: &SourceWithProperties,
+) -> Vec<PathBuf> {
+    for path in &src.source_paths {
+        build_add_source(build, &source_root_dir.join(path));
+    }
+    for flag in &src.compile_flags {
+        build.flag(&flag);
+    }
+    if src.simd_avx2 {
+        ctx.simd().apply_flags(build);
+    }
+    build.compile_intermediates()
 }
 
 fn build_add_source(build: &mut cc::Build, path: &Path) {

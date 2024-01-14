@@ -23,7 +23,7 @@ fn main() {
         event_loop_define = "KQUEUE";
         use_s2n = true;
     } else {
-        event_loop_define = ""
+        event_loop_define = "";
     }
 
     if use_s2n {

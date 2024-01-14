@@ -1,4 +1,4 @@
-use std::path::Path;
+use crate::Context;
 
 /// Implements content of AwsFeatureTests.cmake
 #[derive(Debug)]
@@ -12,10 +12,10 @@ pub struct FeatureTests {
 }
 
 impl FeatureTests {
-    pub fn detect(out_dir: &Path, compiler: &cc::Tool) -> Self {
+    pub fn detect(ctx: &Context) -> Self {
         eprintln!("running feature tests");
         let have_winapi_desktop = super::check_compiles(
-            out_dir,
+            ctx,
             r#"
 #include <Windows.h>
 #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
@@ -26,7 +26,7 @@ it's not windows desktop
 "#,
         );
         let have_gcc_inline_asm = super::check_compiles(
-            out_dir,
+            ctx,
             r#"
 int main() {
     int foo = 42, bar = 24;
@@ -35,7 +35,7 @@ int main() {
 "#,
         );
         let have_auxv = super::check_compiles(
-            out_dir,
+            ctx,
             r#"
 #include <sys/auxv.h>
 int main() {
@@ -48,7 +48,7 @@ int main() {
 "#,
         );
         let have_execinfo = super::check_compiles(
-            out_dir,
+            ctx,
             r#"
 #include <execinfo.h>
 #include <stdlib.h>
@@ -58,10 +58,10 @@ int main() {
 }
 "#,
         );
-        let have_linux_if_link_h = super::check_include_file(out_dir, "linux/if_link.h");
-        let have_msvc_intrinsics_x64 = if compiler.is_like_msvc() {
+        let have_linux_if_link_h = super::check_include_file(ctx, "linux/if_link.h");
+        let have_msvc_intrinsics_x64 = if ctx.compiler.is_like_msvc() {
             super::check_compiles(
-                out_dir,
+                ctx,
                 r#"
 #include <intrin.h>
 int main() {

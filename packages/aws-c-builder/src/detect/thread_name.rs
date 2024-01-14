@@ -1,6 +1,5 @@
-use std::path::Path;
-
 use super::{TargetFamily, TargetVendor};
+use crate::Context;
 
 #[derive(Debug)]
 pub struct ThreadNameMethod {
@@ -9,13 +8,9 @@ pub struct ThreadNameMethod {
 }
 
 impl ThreadNameMethod {
-    pub fn detect(
-        out_dir: &Path,
-        target_family: TargetFamily,
-        target_vendor: TargetVendor,
-    ) -> Self {
+    pub fn detect(ctx: &Context) -> Self {
         eprintln!("detecting thread name methods");
-        if matches!(target_family, TargetFamily::Windows) {
+        if matches!(ctx.target_family, TargetFamily::Windows) {
             // On Windows we do a runtime check for both getter and setter, instead of
             // compile-time check
             return Self {
@@ -25,8 +20,8 @@ impl ThreadNameMethod {
         }
 
         Self {
-            setter: NameSetter::detect(out_dir, target_vendor),
-            getter: NameGetter::detect(out_dir, target_vendor),
+            setter: NameSetter::detect(ctx),
+            getter: NameGetter::detect(ctx),
         }
     }
 
@@ -39,7 +34,7 @@ impl ThreadNameMethod {
         }
     }
 
-    fn check_compiles(out_dir: &Path, call: &str) -> bool {
+    fn check_compiles(ctx: &Context, call: &str) -> bool {
         let code = format!(
             r#"
 #define _GNU_SOURCE
@@ -55,7 +50,7 @@ int main() {{
 }}
 "#
         );
-        super::check_compiles(out_dir, &code)
+        super::check_compiles(ctx, &code)
     }
 }
 
@@ -67,8 +62,8 @@ enum NameSetter {
 }
 
 impl NameSetter {
-    fn detect(out_dir: &Path, target_vendor: TargetVendor) -> Option<Self> {
-        if matches!(target_vendor, TargetVendor::Apple) {
+    fn detect(ctx: &Context) -> Option<Self> {
+        if matches!(ctx.target_vendor, TargetVendor::Apple) {
             // All Apple platforms we support have 1 arg version of the function.
             // So skip compile time check here and instead check if its apple in
             // the thread code.
@@ -76,18 +71,16 @@ impl NameSetter {
         }
 
         // pthread_setname_np() usually takes 2 args
-        if ThreadNameMethod::check_compiles(out_dir, r#"pthread_setname_np(thread_id, "asdf");"#) {
+        if ThreadNameMethod::check_compiles(ctx, r#"pthread_setname_np(thread_id, "asdf");"#) {
             return Some(Self::Setname2);
         }
         // OpenBSD's function takes 2 args, but has a different name.
-        if ThreadNameMethod::check_compiles(out_dir, r#"pthread_set_name_np(thread_id, "asdf");"#) {
+        if ThreadNameMethod::check_compiles(ctx, r#"pthread_set_name_np(thread_id, "asdf");"#) {
             return Some(Self::SetName2);
         }
         // But on NetBSD it takes 3!
-        if ThreadNameMethod::check_compiles(
-            out_dir,
-            r#"pthread_setname_np(thread_id, "asdf", NULL);"#,
-        ) {
+        if ThreadNameMethod::check_compiles(ctx, r#"pthread_setname_np(thread_id, "asdf", NULL);"#)
+        {
             return Some(Self::Setname3);
         }
 
@@ -113,8 +106,8 @@ enum NameGetter {
 }
 
 impl NameGetter {
-    fn detect(out_dir: &Path, target_vendor: TargetVendor) -> Option<Self> {
-        if matches!(target_vendor, TargetVendor::Apple) {
+    fn detect(ctx: &Context) -> Option<Self> {
+        if matches!(ctx.target_vendor, TargetVendor::Apple) {
             // All Apple platforms we support have the same function, so no need for
             // compile-time check.
             return Some(Self::Getname3);
@@ -122,21 +115,21 @@ impl NameGetter {
 
         // Some platforms have 2 arg version
         if ThreadNameMethod::check_compiles(
-            out_dir,
+            ctx,
             r#"char name[16] = {0}; pthread_getname_np(thread_id, name);"#,
         ) {
             return Some(Self::Getname2);
         }
         // Some platforms have 2 arg version but with a different name (eg, OpenBSD)
         if ThreadNameMethod::check_compiles(
-            out_dir,
+            ctx,
             r#"char name[16] = {0}; pthread_get_name_np(thread_id, name);"#,
         ) {
             return Some(Self::GetName2);
         }
         // But majority have 3
         if ThreadNameMethod::check_compiles(
-            out_dir,
+            ctx,
             r#"char name[16] = {0}; pthread_getname_np(thread_id, name, 16);"#,
         ) {
             return Some(Self::Getname3);

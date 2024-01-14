@@ -3,6 +3,8 @@ use std::cell::OnceCell;
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 
+pub use cc;
+
 use self::detect::{
     CommonProperties, FeatureTests, Profile, Simd, TargetArch, TargetFamily, TargetVendor,
     ThreadAffinityMethod, ThreadNameMethod,
@@ -61,6 +63,10 @@ impl Context {
         &self.out_dir
     }
 
+    pub fn get_cc_build(&self) -> cc::Build {
+        self.build.clone()
+    }
+
     pub fn builder<'a>(&'a self, lib_dir: impl ToCow<'a, Path>) -> Builder<'a> {
         Builder::new(self, lib_dir.to_cow())
     }
@@ -104,29 +110,26 @@ impl Context {
 
     fn common_properties(&self) -> &CommonProperties {
         self.common_properties
-            .get_or_init(|| CommonProperties::detect(&self.out_dir, &self.compiler))
+            .get_or_init(|| CommonProperties::detect(self))
     }
 
     fn feature_tests(&self) -> &FeatureTests {
         self.feature_tests
-            .get_or_init(|| FeatureTests::detect(&self.out_dir, &self.compiler))
+            .get_or_init(|| FeatureTests::detect(self))
     }
 
     fn simd(&self) -> &Simd {
-        self.simd
-            .get_or_init(|| Simd::detect(&self.out_dir, &self.build, &self.compiler))
+        self.simd.get_or_init(|| Simd::detect(self))
     }
 
     fn thread_affinity_method(&self) -> &ThreadAffinityMethod {
-        self.thread_affinity_method.get_or_init(|| {
-            ThreadAffinityMethod::detect(&self.out_dir, self.target_family, self.target_os)
-        })
+        self.thread_affinity_method
+            .get_or_init(|| ThreadAffinityMethod::detect(self))
     }
 
     fn thread_name_method(&self) -> &ThreadNameMethod {
-        self.thread_name_method.get_or_init(|| {
-            ThreadNameMethod::detect(&self.out_dir, self.target_family, self.target_vendor)
-        })
+        self.thread_name_method
+            .get_or_init(|| ThreadNameMethod::detect(self))
     }
 
     // feature tests
@@ -190,7 +193,7 @@ pub struct Builder<'a> {
     include_dir: Option<Cow<'a, Path>>,
     bindings_suffix: Option<Cow<'a, str>>,
     source_paths: Vec<Cow<'a, Path>>,
-    source_paths_avx2: Vec<Cow<'a, Path>>,
+    sources_with_properties: Vec<SourceWithProperties<'a>>,
     aws_set_common_properties: bool,
     aws_set_thread_affinity_method: bool,
     aws_set_thread_name_method: bool,
@@ -210,7 +213,7 @@ impl<'a> Builder<'a> {
             include_dir: None,
             bindings_suffix: None,
             source_paths: Vec::new(),
-            source_paths_avx2: Vec::new(),
+            sources_with_properties: Vec::new(),
             aws_set_common_properties: false,
             aws_set_thread_affinity_method: false,
             aws_set_thread_name_method: false,
@@ -245,9 +248,10 @@ impl<'a> Builder<'a> {
         self
     }
 
-    pub fn simd_add_source_avx2(&mut self, path: impl ToCow<'a, Path>) -> &mut Self {
-        self.source_paths_avx2.push(path.to_cow());
-        self
+    pub fn source_with_properties(&mut self) -> &mut SourceWithProperties<'a> {
+        self.sources_with_properties
+            .push(SourceWithProperties::new());
+        self.sources_with_properties.last_mut().unwrap()
     }
 
     pub fn define(&mut self, var: &str, val: impl Into<Option<&'a str>>) -> &mut Self {
@@ -302,6 +306,39 @@ impl<'a> Builder<'a> {
 
     pub fn aws_set_thread_name_method(&mut self) -> &mut Self {
         self.aws_set_thread_name_method = true;
+        self
+    }
+}
+
+#[derive(Debug)]
+pub struct SourceWithProperties<'a> {
+    source_paths: Vec<Cow<'a, Path>>,
+    compile_flags: Vec<Cow<'a, str>>,
+    simd_avx2: bool,
+}
+
+impl<'a> SourceWithProperties<'a> {
+    fn new() -> Self {
+        Self {
+            source_paths: Vec::new(),
+            compile_flags: Vec::new(),
+            simd_avx2: false,
+        }
+    }
+
+    pub fn source_path(&mut self, path: impl ToCow<'a, Path>) -> &mut Self {
+        self.source_paths.push(path.to_cow());
+        self
+    }
+
+    pub fn compile_flag(&mut self, flag: impl ToCow<'a, str>) -> &mut Self {
+        self.compile_flags.push(flag.to_cow());
+        self
+    }
+
+    /// Simulates `simd_add_source_avx2`
+    pub fn simd_avx2(&mut self) -> &mut Self {
+        self.simd_avx2 = true;
         self
     }
 }

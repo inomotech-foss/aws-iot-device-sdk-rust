@@ -1,6 +1,5 @@
-use std::path::Path;
-
 use super::Profile;
+use crate::Context;
 
 /// Implementation of the `aws_set_common_properties` CMake function.
 #[derive(Debug)]
@@ -12,15 +11,15 @@ pub struct CommonProperties {
 }
 
 impl CommonProperties {
-    pub fn detect(out_dir: &Path, compiler: &cc::Tool) -> Self {
+    pub fn detect(ctx: &Context) -> Self {
         eprintln!("detecting common properties");
 
-        let has_stdint = super::check_include_file(out_dir, "stdint.h");
-        let has_stdbool = super::check_include_file(out_dir, "stdbool.h");
+        let has_stdint = super::check_include_file(ctx, "stdint.h");
+        let has_stdbool = super::check_include_file(ctx, "stdbool.h");
         // some platforms (especially when cross-compiling) do not have the sysconf API
         // in their toolchain files.
         let have_sysconf = super::check_compiles(
-            out_dir,
+            ctx,
             r#"
 #include <unistd.h>
 int main() { sysconf(_SC_NPROCESSORS_ONLN); }
@@ -30,7 +29,7 @@ int main() { sysconf(_SC_NPROCESSORS_ONLN); }
             has_stdint,
             has_stdbool,
             have_sysconf,
-            compiler_specific: CompilerSpecific::detect(out_dir, compiler),
+            compiler_specific: CompilerSpecific::detect(ctx),
         }
     }
 
@@ -44,6 +43,7 @@ int main() { sysconf(_SC_NPROCESSORS_ONLN); }
         if self.have_sysconf {
             build.define("HAVE_SYSCONF", None);
         }
+        self.compiler_specific.apply(build);
         if matches!(profile, Profile::Debug) {
             build.define("DEBUG_BUILD", None);
         }
@@ -71,12 +71,12 @@ enum CompilerSpecific {
 }
 
 impl CompilerSpecific {
-    fn detect(out_dir: &Path, compiler: &cc::Tool) -> Self {
-        if compiler.is_like_msvc() {
+    fn detect(ctx: &Context) -> Self {
+        if ctx.compiler.is_like_msvc() {
             Self::Msvc
         } else {
             let outline_atomics = super::check_compiles_with_cc(
-                out_dir,
+                ctx,
                 cc::Build::new().flag("-moutline-atomics").flag("-Werror"),
                 r#"
 int main() {
@@ -88,7 +88,7 @@ int main() {
             );
             Self::Gnu {
                 outline_atomics,
-                posix_lfs: PosixLfs::detect(out_dir),
+                posix_lfs: PosixLfs::detect(ctx),
             }
         }
     }
@@ -120,7 +120,7 @@ struct PosixLfs {
 }
 
 impl PosixLfs {
-    fn detect(out_dir: &Path) -> Self {
+    fn detect(ctx: &Context) -> Self {
         const CODE: &str = r#"
 #include <stdio.h>
 /* fails to compile if off_t smaller than 64bits */
@@ -130,10 +130,10 @@ int main() { return 0; }
 
         let mut supported;
         let mut via_define = false;
-        if super::check_compiles(out_dir, CODE) {
+        if super::check_compiles(ctx, CODE) {
             supported = true;
         } else if super::check_compiles_with_cc(
-            out_dir,
+            ctx,
             &mut cc::Build::new().define("_FILE_OFFSET_BITS", "64"),
             CODE,
         ) {
@@ -145,7 +145,7 @@ int main() { return 0; }
 
         if supported {
             // sometimes off_t is 64bit, but fseeko() is missing (ex: Android API < 24)
-            supported = super::check_symbol_exists(out_dir, ["stdio.h"], "fseeko");
+            supported = super::check_symbol_exists(ctx, ["stdio.h"], "fseeko");
         }
 
         Self {

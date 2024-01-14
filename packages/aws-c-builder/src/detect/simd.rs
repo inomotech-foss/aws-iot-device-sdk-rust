@@ -1,4 +1,4 @@
-use std::path::Path;
+use crate::Context;
 
 #[derive(Debug)]
 pub struct Simd {
@@ -8,14 +8,14 @@ pub struct Simd {
 }
 
 impl Simd {
-    pub fn detect(out_dir: &Path, build: &cc::Build, compiler: &cc::Tool) -> Self {
+    pub fn detect(ctx: &Context) -> Self {
         eprintln!("detecting SIMD support");
-        let flags = Avx2Flags::detect(build, compiler);
+        let flags = Avx2Flags::detect(ctx);
 
-        let mut tmp_build = build.clone();
+        let mut tmp_build = ctx.build.clone();
         flags.apply(&mut tmp_build);
         let have_avx2_intrinsics = super::check_compiles_with_cc(
-            out_dir,
+            ctx,
             &mut tmp_build,
             r#"
 #include <immintrin.h>
@@ -35,7 +35,7 @@ int main() {
 "#,
         );
         let have_mm256_extract_epi64 = super::check_compiles_with_cc(
-            out_dir,
+            ctx,
             &mut tmp_build,
             r#"
 #include <immintrin.h>
@@ -78,16 +78,18 @@ enum Avx2Flags {
 }
 
 impl Avx2Flags {
-    fn detect(build: &cc::Build, compiler: &cc::Tool) -> Self {
-        if compiler.is_like_msvc() {
-            if build
+    fn detect(ctx: &Context) -> Self {
+        if ctx.compiler.is_like_msvc() {
+            if ctx
+                .build
                 .is_flag_supported("/arch:AVX2")
                 .expect("check avx2 flag support")
             {
                 return Self::Msvc;
             }
         } else {
-            if build
+            if ctx
+                .build
                 .is_flag_supported("-mavx2")
                 .expect("check avx2 flag support")
             {

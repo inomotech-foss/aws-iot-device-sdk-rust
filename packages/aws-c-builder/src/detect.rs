@@ -1,4 +1,3 @@
-use std::path::Path;
 use std::sync::atomic::AtomicU8;
 
 pub use self::cflags::CommonProperties;
@@ -6,6 +5,7 @@ pub use self::feature_tests::FeatureTests;
 pub use self::simd::Simd;
 pub use self::thread_affinity::ThreadAffinityMethod;
 pub use self::thread_name::ThreadNameMethod;
+use crate::Context;
 
 mod cflags;
 mod feature_tests;
@@ -16,16 +16,16 @@ mod thread_name;
 /// Checks whether the given code snippet successfully compiles.
 ///
 /// Must not be called in parallel.
-pub fn check_compiles(out_dir: &Path, code: &str) -> bool {
-    check_compiles_with_cc(out_dir, &mut cc::Build::new(), code)
+pub fn check_compiles(ctx: &Context, code: &str) -> bool {
+    check_compiles_with_cc(ctx, &mut ctx.build.clone(), code)
 }
 
 /// Checks whether the given code snippet successfully compiles with a
 /// pre-configured [`cc::Build`].
 ///
 /// Must not be called in parallel.
-pub fn check_compiles_with_cc(out_dir: &Path, build: &mut cc::Build, code: &str) -> bool {
-    let out_dir = out_dir.join("comptest");
+pub fn check_compiles_with_cc(ctx: &Context, build: &mut cc::Build, code: &str) -> bool {
+    let out_dir = ctx.out_dir.join("comptest");
     std::fs::create_dir_all(&out_dir).expect("create comptest dir");
 
     let c_file = {
@@ -54,7 +54,7 @@ pub fn check_compiles_with_cc(out_dir: &Path, build: &mut cc::Build, code: &str)
 ///
 /// Based on cmake's implementation.
 /// See: <https://github.com/Kitware/CMake/blob/master/Modules/CheckSymbolExists.cmake>
-pub fn check_symbol_exists<H>(out_dir: &Path, headers: H, symbol: &str) -> bool
+pub fn check_symbol_exists<H>(ctx: &Context, headers: H, symbol: &str) -> bool
 where
     H: IntoIterator,
     H::Item: AsRef<str>,
@@ -79,20 +79,20 @@ int main(int argc, char** argv) {{
 "
     )
     .unwrap();
-    check_compiles(out_dir, &code)
+    check_compiles(ctx, &code)
 }
 
 /// Checks whether a given header is available during compilation.
 ///
 /// See: <https://github.com/Kitware/CMake/blob/master/Modules/CheckIncludeFile.cmake>
-pub fn check_include_file(out_dir: &Path, name: &str) -> bool {
+pub fn check_include_file(ctx: &Context, name: &str) -> bool {
     let code = format!(
         r#"
 #include <{name}>
 int main(void) {{ return 0; }}
 "#
     );
-    check_compiles(out_dir, &code)
+    check_compiles(ctx, &code)
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
