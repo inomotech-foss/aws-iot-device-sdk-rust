@@ -23,7 +23,7 @@ const ENABLE_TRACING_FEATURE: &str = "enable-tracing";
 #[derive(Debug)]
 pub struct Context {
     out_dir: PathBuf,
-    build: cc::Build,
+    cc_build: cc::Build,
     compiler: cc::Tool,
     profile: Profile,
     target_arch: TargetArch,
@@ -37,14 +37,20 @@ pub struct Context {
     thread_name_method: OnceCell<ThreadNameMethod>,
 }
 
+impl Default for Context {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Context {
     pub fn new() -> Self {
         let out_dir = PathBuf::from(std::env::var_os("OUT_DIR").unwrap());
-        let build = cc::Build::new();
-        let compiler = build.get_compiler();
+        let cc_build = cc::Build::new();
+        let compiler = cc_build.get_compiler();
         Self {
             out_dir,
-            build,
+            cc_build,
             compiler,
             profile: Profile::from_env(),
             target_arch: TargetArch::from_env(),
@@ -64,7 +70,7 @@ impl Context {
     }
 
     pub fn get_cc_build(&self) -> cc::Build {
-        self.build.clone()
+        self.cc_build.clone()
     }
 
     pub fn builder<'a>(&'a self, lib_dir: impl ToCow<'a, Path>) -> Builder<'a> {
@@ -204,7 +210,7 @@ impl<'a> Builder<'a> {
     // meta
 
     fn new(ctx: &'a Context, lib_dir: Cow<'a, Path>) -> Self {
-        let cc_build = ctx.build.clone();
+        let cc_build = ctx.cc_build.clone();
         Self {
             ctx,
             lib_dir,
@@ -357,7 +363,7 @@ fn get_dependency_variable_os(dependency: &str, name: &str) -> OsString {
 fn try_get_dependency_variable_os(dependency: &str, name: &str) -> Option<OsString> {
     let env_name = format!(
         "DEP_{}_{}",
-        dependency.replace("-", "_").to_ascii_uppercase(),
+        dependency.replace('-', "_").to_ascii_uppercase(),
         name.to_ascii_uppercase()
     );
     std::env::var_os(env_name)
@@ -366,7 +372,7 @@ fn try_get_dependency_variable_os(dependency: &str, name: &str) -> Option<OsStri
 fn is_feature_enabled(name: &str) -> bool {
     std::env::var_os(format!(
         "CARGO_FEATURE_{}",
-        name.replace("-", "_").to_ascii_uppercase()
+        name.replace('-', "_").to_ascii_uppercase()
     ))
     .is_some()
 }

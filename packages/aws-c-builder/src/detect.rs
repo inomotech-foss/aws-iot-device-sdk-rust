@@ -17,7 +17,7 @@ mod thread_name;
 ///
 /// Must not be called in parallel.
 pub fn check_compiles(ctx: &Context, code: &str) -> bool {
-    check_compiles_with_cc(ctx, &mut ctx.build.clone(), code)
+    check_compiles_with_cc(ctx, &mut ctx.cc_build.clone(), code)
 }
 
 /// Checks whether the given code snippet successfully compiles with a

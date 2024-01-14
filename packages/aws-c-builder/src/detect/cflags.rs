@@ -77,7 +77,10 @@ impl CompilerSpecific {
         } else {
             let outline_atomics = super::check_compiles_with_cc(
                 ctx,
-                cc::Build::new().flag("-moutline-atomics").flag("-Werror"),
+                ctx.cc_build
+                    .clone()
+                    .flag("-moutline-atomics")
+                    .flag("-Werror"),
                 r#"
 int main() {
     int x = 1;
@@ -134,7 +137,7 @@ int main() { return 0; }
             supported = true;
         } else if super::check_compiles_with_cc(
             ctx,
-            &mut cc::Build::new().define("_FILE_OFFSET_BITS", "64"),
+            ctx.cc_build.clone().define("_FILE_OFFSET_BITS", "64"),
             CODE,
         ) {
             supported = true;

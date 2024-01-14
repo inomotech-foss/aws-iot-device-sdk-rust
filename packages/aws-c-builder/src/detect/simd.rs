@@ -12,7 +12,7 @@ impl Simd {
         eprintln!("detecting SIMD support");
         let flags = Avx2Flags::detect(ctx);
 
-        let mut tmp_build = ctx.build.clone();
+        let mut tmp_build = ctx.cc_build.clone();
         flags.apply(&mut tmp_build);
         let have_avx2_intrinsics = super::check_compiles_with_cc(
             ctx,
@@ -81,20 +81,18 @@ impl Avx2Flags {
     fn detect(ctx: &Context) -> Self {
         if ctx.compiler.is_like_msvc() {
             if ctx
-                .build
+                .cc_build
                 .is_flag_supported("/arch:AVX2")
                 .expect("check avx2 flag support")
             {
                 return Self::Msvc;
             }
-        } else {
-            if ctx
-                .build
-                .is_flag_supported("-mavx2")
-                .expect("check avx2 flag support")
-            {
-                return Self::Gnu;
-            }
+        } else if ctx
+            .cc_build
+            .is_flag_supported("-mavx2")
+            .expect("check avx2 flag support")
+        {
+            return Self::Gnu;
         }
 
         Self::None

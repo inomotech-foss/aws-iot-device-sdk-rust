@@ -69,7 +69,7 @@ fn compile_source_with_properties(
         build_add_source(build, &source_root_dir.join(path));
     }
     for flag in &src.compile_flags {
-        build.flag(&flag);
+        build.flag(flag);
     }
     if src.simd_avx2 {
         ctx.simd().apply_flags(build);
