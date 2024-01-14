@@ -1,5 +1,7 @@
 fn main() {
-    aws_c_builder::Builder::new("aws-c-sdkutils")
-        .dependency("AWS_C_COMMON")
+    let ctx = aws_c_builder::Context::new();
+    ctx.builder("aws-c-sdkutils")
+        .aws_set_common_properties()
+        .dependencies(["aws-c-common"])
         .build();
 }

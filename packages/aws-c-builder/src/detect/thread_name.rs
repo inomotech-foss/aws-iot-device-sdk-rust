@@ -14,6 +14,7 @@ impl ThreadNameMethod {
         target_family: TargetFamily,
         target_vendor: TargetVendor,
     ) -> Self {
+        eprintln!("detecting thread name methods");
         if matches!(target_family, TargetFamily::Windows) {
             // On Windows we do a runtime check for both getter and setter, instead of
             // compile-time check

@@ -1,6 +1,13 @@
 fn main() {
-    aws_c_builder::Builder::new("aws-c-mqtt")
-        .dependencies(["AWS_C_COMMON", "AWS_C_HTTP", "AWS_C_IO"])
+    let ctx = aws_c_builder::Context::new();
+    ctx.builder("aws-c-mqtt")
         .source_path("v5")
+        .aws_set_common_properties()
+        .dependencies([
+            "aws-c-http",
+            // transitive
+            "aws-c-io",
+            "aws-c-common",
+        ])
         .build();
 }

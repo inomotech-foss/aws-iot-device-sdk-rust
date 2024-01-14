@@ -9,11 +9,11 @@ publish.workspace = true
 repository.workspace = true
 rust-version.workspace = true
 
-[features]
-enable-tracing = ["dep:ittapi-sys"]
-
 [package.metadata.aws-c-builder]
 enable = true
+
+[features]
+enable-tracing = ["dep:ittapi-sys"]
 
 [dependencies]
 ittapi-sys = { workspace = true, optional = true }

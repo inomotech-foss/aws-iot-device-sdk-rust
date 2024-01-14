@@ -13,6 +13,7 @@ pub struct FeatureTests {
 
 impl FeatureTests {
     pub fn detect(out_dir: &Path, compiler: &cc::Tool) -> Self {
+        eprintln!("running feature tests");
         let have_winapi_desktop = super::check_compiles(
             out_dir,
             r#"
@@ -29,7 +30,7 @@ it's not windows desktop
             r#"
 int main() {
     int foo = 42, bar = 24;
-    __asm__ __volatile__(\"\":\"=r\"(foo):\"r\"(bar):\"memory\");
+    __asm__ __volatile__("":"=r"(foo):"r"(bar):"memory");
 }
 "#,
         );

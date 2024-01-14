@@ -1,150 +1,335 @@
 use std::borrow::Cow;
+use std::cell::OnceCell;
+use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 
-pub use cc;
+use self::detect::{
+    CommonProperties, FeatureTests, Profile, Simd, TargetArch, TargetFamily, TargetVendor,
+    ThreadAffinityMethod, ThreadNameMethod,
+};
+use crate::detect::TargetOs;
+pub use crate::to_cow::ToCow;
 
 mod bindings;
+pub mod c_header;
 mod compile;
 pub mod detect;
+mod to_cow;
 
-const ENABLE_TRACING_FEATURE_ENV: &str = "CARGO_FEATURE_ENABLE_TRACING";
+const ENABLE_TRACING_FEATURE: &str = "enable-tracing";
 
-type BoxedCcCallback<'a> = Box<dyn FnMut(&mut cc::Build) + 'a>;
-
-pub struct Builder<'a> {
-    lib_dir: PathBuf,
-    dependencies: Vec<&'a str>,
-    source_paths: Vec<Cow<'a, Path>>,
-    include_dir: Option<Cow<'a, Path>>,
-    cc_callbacks: Vec<BoxedCcCallback<'a>>,
-    bindings_suffix: &'a str,
+#[derive(Debug)]
+pub struct Context {
+    out_dir: PathBuf,
+    build: cc::Build,
+    compiler: cc::Tool,
+    profile: Profile,
+    target_arch: TargetArch,
+    target_family: TargetFamily,
+    target_vendor: TargetVendor,
+    target_os: TargetOs,
+    common_properties: OnceCell<CommonProperties>,
+    feature_tests: OnceCell<FeatureTests>,
+    simd: OnceCell<Simd>,
+    thread_affinity_method: OnceCell<ThreadAffinityMethod>,
+    thread_name_method: OnceCell<ThreadNameMethod>,
 }
 
-impl<'a> Builder<'a> {
-    pub fn new(lib_dir: impl AsRef<Path>) -> Self {
-        let lib_dir = lib_dir.as_ref().canonicalize().expect("lib dir");
+impl Context {
+    pub fn new() -> Self {
+        let out_dir = PathBuf::from(std::env::var_os("OUT_DIR").unwrap());
+        let build = cc::Build::new();
+        let compiler = build.get_compiler();
         Self {
-            lib_dir,
-            dependencies: Vec::new(),
-            source_paths: Vec::new(),
-            include_dir: None,
-            cc_callbacks: Vec::new(),
-            bindings_suffix: "",
+            out_dir,
+            build,
+            compiler,
+            profile: Profile::from_env(),
+            target_arch: TargetArch::from_env(),
+            target_family: TargetFamily::from_env(),
+            target_vendor: TargetVendor::from_env(),
+            target_os: TargetOs::from_env(),
+            common_properties: OnceCell::new(),
+            feature_tests: OnceCell::new(),
+            simd: OnceCell::new(),
+            thread_affinity_method: OnceCell::new(),
+            thread_name_method: OnceCell::new(),
         }
     }
 
-    pub fn dependencies(&mut self, iter: impl IntoIterator<Item = &'a str>) -> &mut Self {
-        self.dependencies.extend(iter);
+    pub fn out_dir(&self) -> &Path {
+        &self.out_dir
+    }
+
+    pub fn builder<'a>(&'a self, lib_dir: impl ToCow<'a, Path>) -> Builder<'a> {
+        Builder::new(self, lib_dir.to_cow())
+    }
+
+    // compiler info
+
+    pub fn is_msvc(&self) -> bool {
+        self.compiler.is_like_msvc()
+    }
+
+    // target info
+
+    pub fn is_win32(&self) -> bool {
+        matches!(self.target_family, TargetFamily::Windows)
+    }
+
+    pub fn is_apple(&self) -> bool {
+        matches!(self.target_vendor, TargetVendor::Apple)
+    }
+
+    pub fn cmake_system_name(&self) -> CMakeSystemName {
+        CMakeSystemName {
+            target_os: self.target_os,
+        }
+    }
+
+    pub fn is_aws_arch_intel(&self) -> bool {
+        matches!(self.target_arch, TargetArch::X86 | TargetArch::X86_64)
+    }
+
+    pub fn is_aws_arch_arm64(&self) -> bool {
+        matches!(self.target_arch, TargetArch::Aarch64)
+    }
+
+    pub fn is_aws_arch_arm32(&self) -> bool {
+        matches!(self.target_arch, TargetArch::Arm)
+    }
+
+    // detect
+    // TODO: caching by loading from common?
+
+    fn common_properties(&self) -> &CommonProperties {
+        self.common_properties
+            .get_or_init(|| CommonProperties::detect(&self.out_dir, &self.compiler))
+    }
+
+    fn feature_tests(&self) -> &FeatureTests {
+        self.feature_tests
+            .get_or_init(|| FeatureTests::detect(&self.out_dir, &self.compiler))
+    }
+
+    fn simd(&self) -> &Simd {
+        self.simd
+            .get_or_init(|| Simd::detect(&self.out_dir, &self.build, &self.compiler))
+    }
+
+    fn thread_affinity_method(&self) -> &ThreadAffinityMethod {
+        self.thread_affinity_method.get_or_init(|| {
+            ThreadAffinityMethod::detect(&self.out_dir, self.target_family, self.target_os)
+        })
+    }
+
+    fn thread_name_method(&self) -> &ThreadNameMethod {
+        self.thread_name_method.get_or_init(|| {
+            ThreadNameMethod::detect(&self.out_dir, self.target_family, self.target_vendor)
+        })
+    }
+
+    // feature tests
+
+    pub fn aws_have_gcc_inline_asm(&self) -> bool {
+        self.feature_tests().have_gcc_inline_asm
+    }
+
+    pub fn aws_have_msvc_intrinsics_x64(&self) -> bool {
+        self.feature_tests().have_msvc_intrinsics_x64
+    }
+
+    pub fn aws_have_posix_large_file_support(&self) -> bool {
+        self.common_properties().have_posix_large_file_support()
+    }
+
+    pub fn aws_have_execinfo(&self) -> bool {
+        self.feature_tests().have_execinfo
+    }
+
+    pub fn aws_have_winapi_desktop(&self) -> bool {
+        self.feature_tests().have_winapi_desktop
+    }
+
+    pub fn aws_have_linux_if_link_h(&self) -> bool {
+        self.feature_tests().have_linux_if_link_h
+    }
+
+    // simd
+
+    pub fn have_avx2_intrinsics(&self) -> bool {
+        self.simd().have_avx2_intrinsics
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct CMakeSystemName {
+    target_os: TargetOs,
+}
+
+impl CMakeSystemName {
+    pub fn is_linux(&self) -> bool {
+        matches!(self.target_os, TargetOs::Linux)
+    }
+
+    pub fn is_bsd(&self) -> bool {
+        self.target_os.is_bsd()
+    }
+
+    pub fn is_android(&self) -> bool {
+        matches!(self.target_os, TargetOs::Android)
+    }
+}
+
+#[derive(Debug)]
+pub struct Builder<'a> {
+    ctx: &'a Context,
+    lib_dir: Cow<'a, Path>,
+    cc_build: cc::Build,
+    dependencies: Vec<Cow<'a, str>>,
+    include_dir: Option<Cow<'a, Path>>,
+    bindings_suffix: Option<Cow<'a, str>>,
+    source_paths: Vec<Cow<'a, Path>>,
+    source_paths_avx2: Vec<Cow<'a, Path>>,
+    aws_set_common_properties: bool,
+    aws_set_thread_affinity_method: bool,
+    aws_set_thread_name_method: bool,
+    simd_add_definitions: bool,
+}
+
+impl<'a> Builder<'a> {
+    // meta
+
+    fn new(ctx: &'a Context, lib_dir: Cow<'a, Path>) -> Self {
+        let cc_build = ctx.build.clone();
+        Self {
+            ctx,
+            lib_dir,
+            cc_build,
+            dependencies: Vec::new(),
+            include_dir: None,
+            bindings_suffix: None,
+            source_paths: Vec::new(),
+            source_paths_avx2: Vec::new(),
+            aws_set_common_properties: false,
+            aws_set_thread_affinity_method: false,
+            aws_set_thread_name_method: false,
+            simd_add_definitions: false,
+        }
+    }
+
+    pub fn set_include_dir(&mut self, path: impl ToCow<'a, Path>) -> &mut Self {
+        self.include_dir = Some(path.to_cow());
         self
     }
 
-    pub fn dependency(&mut self, value: &'a str) -> &mut Self {
-        self.dependencies.push(value);
+    pub fn bindings_suffix(&mut self, suffix: impl ToCow<'a, str>) -> &mut Self {
+        self.bindings_suffix = Some(suffix.to_cow());
         self
     }
 
-    pub fn source_paths<I>(&mut self, iter: I) -> &mut Self
+    pub fn dependencies<It>(&mut self, deps: It) -> &mut Self
     where
-        I: IntoIterator,
-        I::Item: AsCow<'a, Path>,
+        It: IntoIterator,
+        It::Item: ToCow<'a, str>,
     {
-        self.source_paths
-            .extend(iter.into_iter().map(AsCow::as_cow_path));
+        self.dependencies
+            .extend(deps.into_iter().map(|x| x.to_cow()));
         self
     }
 
-    pub fn source_path(&mut self, value: impl AsCow<'a, Path>) -> &mut Self {
-        self.source_paths.push(value.as_cow_path());
+    // source
+
+    pub fn source_path(&mut self, path: impl ToCow<'a, Path>) -> &mut Self {
+        self.source_paths.push(path.to_cow());
         self
     }
 
-    pub fn include_dir(&mut self, value: impl AsCow<'a, Path>) -> &mut Self {
-        assert!(self.include_dir.is_none());
-        self.include_dir = Some(value.as_cow_path());
+    pub fn simd_add_source_avx2(&mut self, path: impl ToCow<'a, Path>) -> &mut Self {
+        self.source_paths_avx2.push(path.to_cow());
         self
     }
 
-    pub fn cc_callback(&mut self, cb: impl FnMut(&mut cc::Build) + 'a) -> &mut Self {
-        self.cc_callbacks.push(Box::new(cb));
-        self
-    }
-
-    pub fn bindings_suffix(&mut self, value: &'a str) -> &mut Self {
-        self.bindings_suffix = value;
+    pub fn define(&mut self, var: &str, val: impl Into<Option<&'a str>>) -> &mut Self {
+        self.cc_build.define(var, val);
         self
     }
 
     pub fn build(&mut self) {
-        let out_dir = PathBuf::from(std::env::var_os("OUT_DIR").unwrap());
-
         let include_dir = self
             .include_dir
             .clone()
             .unwrap_or_else(|| Cow::Owned(self.lib_dir.join("include")));
-        println!("cargo:include={}", include_dir.to_str().unwrap());
+        println!(
+            "cargo:include={}",
+            include_dir.canonicalize().unwrap().to_str().unwrap()
+        );
 
         let include_dirs = std::iter::once(include_dir)
             .chain(
                 self.dependencies
                     .iter()
-                    .map(|name| get_dep_include_path(name))
-                    .map(Cow::from),
+                    .map(|name| get_dependency_include_path(name))
+                    .map(Cow::Owned),
             )
             .collect::<Vec<_>>();
-        let enable_tracing = should_enable_tracing();
 
-        self::compile::run(self, &include_dirs, enable_tracing);
-        self::bindings::prepare(&out_dir, &include_dirs, self.bindings_suffix);
+        let enable_tracing = is_feature_enabled(ENABLE_TRACING_FEATURE);
+        crate::compile::run(self, &include_dirs, enable_tracing);
+        crate::bindings::prepare(
+            &self.ctx.out_dir,
+            &include_dirs,
+            self.bindings_suffix.as_deref().unwrap_or(""),
+        )
     }
-}
 
-pub trait AsCow<'a, T>
-where
-    T: ToOwned + ?Sized,
-{
-    fn as_cow_path(self) -> Cow<'a, T>;
-}
+    // aws specific
 
-impl<'a, T> AsCow<'a, T> for Cow<'a, T>
-where
-    T: ToOwned + ?Sized,
-{
-    fn as_cow_path(self) -> Cow<'a, T> {
+    pub fn simd_add_definitions(&mut self) -> &mut Self {
+        self.simd_add_definitions = true;
+        self
+    }
+
+    pub fn aws_set_common_properties(&mut self) -> &mut Self {
+        self.aws_set_common_properties = true;
+        self
+    }
+
+    pub fn aws_set_thread_affinity_method(&mut self) -> &mut Self {
+        self.aws_set_thread_affinity_method = true;
+        self
+    }
+
+    pub fn aws_set_thread_name_method(&mut self) -> &mut Self {
+        self.aws_set_thread_name_method = true;
         self
     }
 }
 
-impl<'a, T> AsCow<'a, T> for &'a T
-where
-    T: ToOwned + ?Sized,
-{
-    fn as_cow_path(self) -> Cow<'a, T> {
-        Cow::Borrowed(self)
+fn get_dependency_include_path(dependency: &str) -> PathBuf {
+    PathBuf::from(get_dependency_variable_os(dependency, "include"))
+}
+
+fn get_dependency_variable_os(dependency: &str, name: &str) -> OsString {
+    match try_get_dependency_variable_os(dependency, name) {
+        Some(v) => v,
+        None => panic!("dependency {dependency:?} didn't set the variable {name:?}"),
     }
 }
 
-impl<'a, T> AsCow<'a, T> for T
-where
-    T: Clone,
-{
-    fn as_cow_path(self) -> Cow<'a, T> {
-        Cow::Owned(self)
-    }
+fn try_get_dependency_variable_os(dependency: &str, name: &str) -> Option<OsString> {
+    let env_name = format!(
+        "DEP_{}_{}",
+        dependency.replace("-", "_").to_ascii_uppercase(),
+        name.to_ascii_uppercase()
+    );
+    std::env::var_os(env_name)
 }
 
-impl<'a> AsCow<'a, Path> for &'a str {
-    fn as_cow_path(self) -> Cow<'a, Path> {
-        Cow::Borrowed(Path::new(self))
-    }
-}
-
-fn get_dep_include_path(name: &str) -> PathBuf {
-    let Some(raw) = std::env::var_os(format!("DEP_{name}_INCLUDE")) else {
-        panic!("dependency {name} didn't set 'include' variable");
-    };
-    PathBuf::from(raw)
-}
-
-fn should_enable_tracing() -> bool {
-    std::env::var_os(ENABLE_TRACING_FEATURE_ENV).is_some()
+fn is_feature_enabled(name: &str) -> bool {
+    std::env::var_os(format!(
+        "CARGO_FEATURE_{}",
+        name.replace("-", "_").to_ascii_uppercase()
+    ))
+    .is_some()
 }

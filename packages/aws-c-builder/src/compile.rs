@@ -10,27 +10,51 @@ pub fn run(builder: &mut Builder, include_dirs: &[Cow<Path>], enable_tracing: bo
     );
 
     let lib_name = builder.lib_dir.file_name().unwrap().to_str().unwrap();
-    let mut build = cc::Build::new();
+    let mut build = builder.cc_build.clone();
     build
         .warnings(true)
         .extra_warnings(false)
-        .std("c99")
         .includes(include_dirs);
 
-    if !enable_tracing {
-        build.define("INTEL_NO_ITTNOTIFY_API", None);
+    if builder.aws_set_common_properties {
+        builder
+            .ctx
+            .common_properties()
+            .apply(&mut build, builder.ctx.profile, enable_tracing);
+    }
+    if builder.aws_set_thread_affinity_method {
+        builder.ctx.thread_affinity_method().apply(&mut build);
+    }
+    if builder.aws_set_thread_name_method {
+        builder.ctx.thread_name_method().apply(&mut build);
+    }
+    if builder.simd_add_definitions {
+        builder.ctx.simd().apply_defines(&mut build);
     }
 
-    let source_dir = builder.lib_dir.join("source");
-    build_add_source(&mut build, &source_dir);
+    let source_root_dir = builder.lib_dir.join("source");
+
+    let avx2_objects = if builder.source_paths_avx2.is_empty() {
+        Vec::new()
+    } else {
+        eprintln!("compiling avx2 objects");
+        let mut build = build.clone();
+        for path in &builder.source_paths_avx2 {
+            build_add_source(&mut build, &source_root_dir.join(path));
+        }
+        build.compile_intermediates()
+    };
+
+    build_add_source(&mut build, &source_root_dir);
     for path in &builder.source_paths {
-        build_add_source(&mut build, &source_dir.join(path));
+        build_add_source(&mut build, &source_root_dir.join(path));
+    }
+    for obj in avx2_objects {
+        build.object(obj);
     }
 
-    for cb in &mut builder.cc_callbacks {
-        cb(&mut build);
-    }
-
+    eprintln!("starting compilation");
+    eprintln!("{builder:#?}");
     build.compile(lib_name);
 }
 
@@ -40,7 +64,11 @@ fn build_add_source(build: &mut cc::Build, path: &Path) {
         return;
     }
 
-    for item in path.read_dir().expect("read dir") {
+    let it = match path.read_dir() {
+        Ok(v) => v,
+        Err(err) => panic!("failed to read source directory {path:?}: {err}"),
+    };
+    for item in it {
         let item = item.unwrap();
         let file_type = item.file_type().unwrap();
         if !file_type.is_file() {

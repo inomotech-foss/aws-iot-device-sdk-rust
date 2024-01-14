@@ -12,6 +12,7 @@ pub enum ThreadAffinityMethod {
 
 impl ThreadAffinityMethod {
     pub fn detect(out_dir: &Path, target_family: TargetFamily, target_os: TargetOs) -> Self {
+        eprintln!("detecting thread affinity method");
         // Non-POSIX, Android, and Apple platforms do not support thread affinity.
         if !matches!(target_family, TargetFamily::Unix) {
             return Self::None;

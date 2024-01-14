@@ -1,11 +1,13 @@
 fn main() {
-    aws_c_builder::Builder::new("aws-c-auth")
+    let ctx = aws_c_builder::Context::new();
+    ctx.builder("aws-c-auth")
         .dependencies([
-            "AWS_C_CAL",
-            "AWS_C_COMMON",
-            "AWS_C_HTTP",
-            "AWS_C_IO",
-            "AWS_C_SDKUTILS",
+            "aws-c-cal",
+            "aws-c-common",
+            "aws-c-http",
+            "aws-c-io",
+            "aws-c-sdkutils",
         ])
+        .aws_set_common_properties()
         .build();
 }

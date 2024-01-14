@@ -13,6 +13,8 @@ pub struct CommonProperties {
 
 impl CommonProperties {
     pub fn detect(out_dir: &Path, compiler: &cc::Tool) -> Self {
+        eprintln!("detecting common properties");
+
         let has_stdint = super::check_include_file(out_dir, "stdint.h");
         let has_stdbool = super::check_include_file(out_dir, "stdbool.h");
         // some platforms (especially when cross-compiling) do not have the sysconf API

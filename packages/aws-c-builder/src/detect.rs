@@ -1,4 +1,11 @@
 use std::path::Path;
+use std::sync::atomic::AtomicU8;
+
+pub use self::cflags::CommonProperties;
+pub use self::feature_tests::FeatureTests;
+pub use self::simd::Simd;
+pub use self::thread_affinity::ThreadAffinityMethod;
+pub use self::thread_name::ThreadNameMethod;
 
 mod cflags;
 mod feature_tests;
@@ -18,7 +25,17 @@ pub fn check_compiles(out_dir: &Path, code: &str) -> bool {
 ///
 /// Must not be called in parallel.
 pub fn check_compiles_with_cc(out_dir: &Path, build: &mut cc::Build, code: &str) -> bool {
-    let c_file = out_dir.join("compile_test.c");
+    let out_dir = out_dir.join("comptest");
+    std::fs::create_dir_all(&out_dir).expect("create comptest dir");
+
+    let c_file = {
+        // we want at least some way to investigate compilation issues, but it also
+        // doesn't need to be as complicated as taking the hash from the source code
+        static ID: AtomicU8 = AtomicU8::new(0);
+        let id = ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        out_dir.join(format!("test_{id:06X}.c"))
+    };
+
     std::fs::write(&c_file, code).expect("write c code compilation test code");
     // TODO: this is too noisy
     build
@@ -27,6 +44,7 @@ pub fn check_compiles_with_cc(out_dir: &Path, build: &mut cc::Build, code: &str)
         .warnings(false)
         .extra_warnings(false)
         .opt_level(0)
+        .out_dir(out_dir)
         .file(c_file)
         .try_compile_intermediates()
         .is_ok()
@@ -154,6 +172,27 @@ impl TargetVendor {
     pub fn from_env() -> Self {
         match std::env::var("CARGO_CFG_TARGET_VENDOR").as_deref() {
             Ok("apple") => Self::Apple,
+            _ => Self::Other,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TargetArch {
+    Other,
+    X86,
+    X86_64,
+    Arm,
+    Aarch64,
+}
+
+impl TargetArch {
+    pub fn from_env() -> Self {
+        match std::env::var("CARGO_CFG_TARGET_ARCH").as_deref() {
+            Ok("x86") => Self::X86,
+            Ok("x86_64") => Self::X86_64,
+            Ok("arm") => Self::Arm,
+            Ok("aarch64") => Self::Aarch64,
             _ => Self::Other,
         }
     }

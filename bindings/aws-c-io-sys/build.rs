@@ -1,113 +1,53 @@
 fn main() {
-    let config = Config::determine();
-    eprintln!("build config: {config:?}");
+    let ctx = aws_c_builder::Context::new();
+    let mut builder = ctx.builder("aws-c-io");
+    builder.bindings_suffix(determine_bindings_suffix(&ctx));
 
-    let mut builder = aws_c_builder::Builder::new("aws-c-io");
-    if config.use_s2n {
-        builder.dependency("S2N_TLS");
+    let mut use_s2n = false;
+    let event_loop_define;
+
+    if ctx.is_win32() {
+        builder.source_path("windows/iocp");
+        event_loop_define = "IO_COMPLETION_PORTS";
+    } else if ctx.cmake_system_name().is_linux() || ctx.cmake_system_name().is_android() {
+        event_loop_define = "EPOLL";
+        use_s2n = true;
+    } else if ctx.is_apple() {
+        builder
+            .source_path("bsd")
+            .source_path("posix")
+            .source_path("darwin");
+        event_loop_define = "KQUEUE";
+    } else if ctx.cmake_system_name().is_bsd() {
+        builder.source_path("bsd").source_path("posix");
+        event_loop_define = "KQUEUE";
+        use_s2n = true;
+    } else {
+        event_loop_define = ""
+    }
+
+    if use_s2n {
         builder.source_path("s2n");
-        builder.cc_callback(|build| {
-            build.define("USE_S2N", None);
-        });
     }
 
-    builder
-        .source_paths(config.source_dirs.iter().copied())
-        .cc_callback(|build| config.event_loop.set_as_define(build))
-        .dependencies(["AWS_C_CAL", "AWS_C_COMMON"])
-        .bindings_suffix(config.bindings.suffix())
-        .build();
-}
-
-#[derive(Debug, Default)]
-struct Config {
-    use_s2n: bool,
-    event_loop: EventLoop,
-    source_dirs: &'static [&'static str],
-    bindings: Bindings,
-}
-
-impl Config {
-    fn determine() -> Self {
-        let target_family = std::env::var("CARGO_CFG_TARGET_FAMILY").unwrap();
-        if target_family == "windows" {
-            return Self {
-                use_s2n: false,
-                event_loop: EventLoop::IoCompletionPorts,
-                bindings: Bindings::Win32IoCompletionPorts,
-                source_dirs: &["windows", "windows/iocp"],
-            };
-        }
-
-        let target_vendor = std::env::var("CARGO_CFG_TARGET_VENDOR").unwrap();
-        if target_vendor == "apple" {
-            return Self {
-                use_s2n: false,
-                event_loop: EventLoop::KQueue,
-                bindings: Bindings::Apple,
-                source_dirs: &["bsd", "posix", "darwin"],
-            };
-        }
-
-        let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap();
-        match target_os.as_str() {
-            "linux" | "android" => Self {
-                use_s2n: true,
-                event_loop: EventLoop::EPoll,
-                bindings: Bindings::Generic,
-                source_dirs: &["linux", "posix"],
-            },
-            "freebsd" | "openbsd" | "netbsd" => Self {
-                use_s2n: true,
-                event_loop: EventLoop::KQueue,
-                bindings: Bindings::Generic,
-                source_dirs: &["bsd", "posix"],
-            },
-            _ => Self::default(),
-        }
-    }
-}
-
-#[derive(Clone, Copy, Debug, Default)]
-enum EventLoop {
-    #[default]
-    None,
-    IoCompletionPorts,
-    EPoll,
-    KQueue,
-}
-
-impl EventLoop {
-    const fn define_value(self) -> Option<&'static str> {
-        match self {
-            Self::None => None,
-            Self::IoCompletionPorts => Some("IO_COMPLETION_PORTS"),
-            Self::EPoll => Some("EPOLL"),
-            Self::KQueue => Some("KQUEUE"),
-        }
+    builder.aws_set_common_properties();
+    if !event_loop_define.is_empty() {
+        builder.define(&format!("AWS_USE_{event_loop_define}"), None);
     }
 
-    fn set_as_define(self, build: &mut aws_c_builder::cc::Build) {
-        if let Some(value) = self.define_value() {
-            build.define(&format!("AWS_USE_{value}"), None);
-        }
+    if use_s2n {
+        builder.define("USE_S2N", None).dependencies(["s2n-tls"]);
     }
+
+    builder.dependencies(["aws-c-common", "aws-c-cal"]).build();
 }
 
-#[derive(Clone, Copy, Debug, Default)]
-enum Bindings {
-    #[default]
-    Generic,
-    Win32IoCompletionPorts,
-    Apple,
-}
-
-impl Bindings {
-    const fn suffix(self) -> &'static str {
-        match self {
-            Self::Generic => "generic",
-            Self::Win32IoCompletionPorts => "win32_iocp",
-            Self::Apple => "apple",
-        }
+fn determine_bindings_suffix(ctx: &aws_c_builder::Context) -> &'static str {
+    if ctx.is_win32() {
+        "win32_iocp"
+    } else if ctx.is_apple() {
+        "apple"
+    } else {
+        "generic"
     }
 }

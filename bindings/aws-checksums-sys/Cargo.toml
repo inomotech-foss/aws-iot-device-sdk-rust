@@ -12,6 +12,9 @@ rust-version.workspace = true
 [package.metadata.aws-c-builder]
 enable = true
 
+[features]
+enable-tracing = ["aws-c-common-sys/enable-tracing"]
+
 [dependencies]
 aws-c-common-sys.workspace = true
 

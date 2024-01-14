@@ -1,5 +1,13 @@
 fn main() {
-    aws_c_builder::Builder::new("aws-c-http")
-        .dependencies(["AWS_C_CAL", "AWS_C_COMMON", "AWS_C_COMPRESSION", "AWS_C_IO"])
+    let ctx = aws_c_builder::Context::new();
+    ctx.builder("aws-c-http")
+        .aws_set_common_properties()
+        .dependencies([
+            "aws-c-io",
+            "aws-c-compression",
+            // transitive
+            "aws-c-common",
+            "aws-c-cal",
+        ])
         .build();
 }
